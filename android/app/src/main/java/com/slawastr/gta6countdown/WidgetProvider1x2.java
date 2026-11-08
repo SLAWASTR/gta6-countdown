@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 
 public class WidgetProvider1x2 extends AppWidgetProvider {
 
@@ -13,6 +14,12 @@ public class WidgetProvider1x2 extends AppWidgetProvider {
             WidgetHelper.updateWidget1x2(context, appWidgetManager, appWidgetId);
         }
         WidgetHelper.scheduleNextAlarm(context);
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+        WidgetHelper.updateWidget1x2(context, appWidgetManager, appWidgetId, newOptions);
     }
 
     @Override
