@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_dark">#0D0718</color>
+    <color name="card_bg">#D9160E27</color>
+    <color name="card_inner">#33FFFFFF</color>
+    <color name="card_inner_dark">#26163E</color>
+    <color name="accent_pink">#FF2A8D</color>
+    <color name="accent_pink_soft">#FF59A7</color>
+    <color name="accent_cyan">#00F2FE</color>
+    <color name="accent_cyan_soft">#4DD6FF</color>
+    <color name="accent_orange">#FF8C42</color>
+    <color name="accent_green">#00E676</color>
+    <color name="text_white">#FFFFFF</color>
+    <color name="text_muted">#B8B0CD</color>
+    <color name="border_pink">#55FF2A8D</color>
+    <color name="border_cyan">#5500F2FE</color>
+    <color name="border_white">#26FFFFFF</color>
+</resources>

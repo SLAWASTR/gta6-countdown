@@ -1,0 +1,157 @@
+name: Build and Release GTA 6 Countdown
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create debug keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Build Android APK with Gradle
+        working-directory: android
+        run: |
+          gradle wrapper
+          chmod +x gradlew
+          ./gradlew assembleRelease || ./gradlew assembleDebug
+
+      - name: Prepare APK Artifact
+        run: |
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk GTA6Countdown-Android.apk
+          elif [ -f android/app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp android/app/build/outputs/apk/debug/app-debug.apk GTA6Countdown-Android.apk
+          fi
+
+      - name: Upload Android Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTA6Countdown-Android
+          path: GTA6Countdown-Android.apk
+          retention-days: 7
+
+  build-windows:
+    name: Build Windows Widget
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Compile GTA6Widget.exe
+        shell: powershell
+        run: |
+          $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          $wpf = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF"
+          & $csc /target:winexe /out:GTA6Widget.exe /win32icon:icon.ico /res:logo.png,logo.png /r:"$wpf\PresentationFramework.dll" /r:"$wpf\PresentationCore.dll" /r:"$wpf\WindowsBase.dll" /r:System.dll /r:System.Xaml.dll /r:System.Drawing.dll GTA6Widget.cs
+          Compress-Archive -Path GTA6Widget.exe, logo.png, icon.ico, run_widget.bat, widget_config.txt, index.html -DestinationPath GTA6Countdown-Windows.zip
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTA6Countdown-Windows
+          path: GTA6Countdown-Windows.zip
+          retention-days: 7
+
+  build-macos:
+    name: Build macOS Widget
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Compile macOS Widget App
+        run: |
+          chmod +x build.sh
+          ./build.sh
+          zip -r GTA6Countdown-macOS.zip GTA6Widget.app index.html logo.png
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTA6Countdown-macOS
+          path: GTA6Countdown-macOS.zip
+          retention-days: 7
+
+  release:
+    name: Create GitHub Release
+    needs: [ build-android, build-windows, build-macos ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Android Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: GTA6Countdown-Android
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: GTA6Countdown-Windows
+
+      - name: Download macOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: GTA6Countdown-macOS
+
+      - name: Determine Release Tag
+        id: release_tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          else
+            echo "TAG=v1.0.0" >> $GITHUB_ENV
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ env.TAG }}
+          name: GTA VI Countdown ${{ env.TAG }}
+          body: |
+            ### 🎮 Grand Theft Auto VI Countdown Release
+            
+            Multiplatform release of the GTA VI countdown widget and application:
+            
+            - 📱 **Android**: `GTA6Countdown-Android.apk`
+              - 2x2 Home Screen Widget (Full countdown: Release + Preload)
+              - 1x2 Home Screen Widget (Compact countdown: Release only)
+              - In-app toggle: Manually hide/disable the preload timer
+              - One-tap Pin Widget to home screen
+            - 🪟 **Windows**: `GTA6Countdown-Windows.zip`
+              - Native WPF desktop widget pinned to wallpaper
+              - Freeform resize & context menu
+              - Preload countdown toggle in context menu
+            - 🍏 **macOS**: `GTA6Countdown-macOS.zip`
+              - Native SwiftUI desktop widget with wallpaper blur
+              - Draggable, context menu, preload countdown toggle
+            - 🌐 **Web**: `index.html` (interactive countdown with Vice City aesthetic & confetti)
+          files: |
+            GTA6Countdown-Android.apk
+            GTA6Countdown-Windows.zip
+            GTA6Countdown-macOS.zip

@@ -1,0 +1,24 @@
+# Gradle & Android build
+.gradle/
+build/
+android/.gradle/
+android/app/build/
+android/local.properties
+android/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# macOS
+.DS_Store
+GTA6Widget.app/
+
+# Windows
+Thumbs.db
+*.zip
+
+# IDE
+.idea/
+*.iml
+.vscode/

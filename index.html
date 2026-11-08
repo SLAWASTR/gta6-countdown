@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTA VI — Таймер обратного отсчета | Релиз и Предзагрузка</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- Canvas Confetti on release -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #090611;
+      --card-bg: rgba(20, 14, 34, 0.75);
+      --pink: #ff2a8d;
+      --pink-glow: rgba(255, 42, 141, 0.4);
+      --cyan: #00f2fe;
+      --cyan-glow: rgba(0, 242, 254, 0.4);
+      --text: #ffffff;
+      --text-dim: #9b94b0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient background glows */
+    .glow {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      filter: blur(140px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.28;
+      animation: pulseGlow 10s ease-in-out infinite alternate;
+    }
+    .glow-pink { top: -80px; left: 15%; background: var(--pink); }
+    .glow-cyan { bottom: -80px; right: 15%; background: var(--cyan); animation-delay: -5s; }
+
+    @keyframes pulseGlow {
+      0% { opacity: 0.22; transform: scale(0.95); }
+      100% { opacity: 0.35; transform: scale(1.08); }
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 780px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+
+    /* Logo Header */
+    .logo-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .logo-img {
+      width: 220px;
+      max-width: 65vw;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 6px 24px rgba(255, 42, 141, 0.45));
+      pointer-events: none;
+    }
+
+    /* 2-Column Grid for Cards */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 22px 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+    }
+
+    .card-release::before {
+      background: linear-gradient(90deg, transparent, var(--pink), transparent);
+    }
+
+    .card-preload::before {
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .card-release .badge { color: #ff9ec7; }
+    .card-preload .badge { color: #80f7ff; }
+
+    /* Digits Row */
+    .digits {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .col {
+      background: rgba(10, 6, 18, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 12px 4px;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .col:hover {
+      transform: translateY(-2px);
+    }
+
+    .num {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1.8rem, 3.8vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1;
+      display: block;
+    }
+
+    .card-release .num {
+      color: #fff;
+      text-shadow: 0 0 14px var(--pink-glow);
+    }
+
+    .card-preload .num {
+      color: #fff;
+      text-shadow: 0 0 14px var(--cyan-glow);
+    }
+
+    .lbl {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-top: 4px;
+      display: block;
+      letter-spacing: 0.5px;
+    }
+
+    .done-msg {
+      display: none;
+      text-align: center;
+      font-weight: 900;
+      font-size: 1.15rem;
+      padding: 18px 0;
+      color: #00ff88;
+      text-shadow: 0 0 14px rgba(0, 255, 136, 0.5);
+    }
+
+    /* Actions */
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .exact-info {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .btn-cal {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-cal:hover {
+      background: rgba(255, 42, 141, 0.2);
+      border-color: var(--pink);
+      transform: translateY(-1px);
+    }
+
+    .btn-cal svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.35);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow glow-pink"></div>
+  <div class="glow glow-cyan"></div>
+
+  <div class="wrapper">
+    
+    <!-- Header with Official Logo -->
+    <div class="logo-wrap">
+      <img src="logo.png" alt="Grand Theft Auto VI" class="logo-img">
+    </div>
+
+    <div class="grid">
+      
+      <!-- 1. РЕЛИЗ (18.11 в 21:30) -->
+      <div class="card card-release">
+        <div class="card-top">
+          <span class="title">🚀 Релиз</span>
+          <span class="badge" id="r-badge">18.11 в 21:30</span>
+        </div>
+        <div class="digits" id="r-timer">
+          <div class="col"><span class="num" id="r-d">00</span><span class="lbl" id="r-d-lbl">дн</span></div>
+          <div class="col"><span class="num" id="r-h">00</span><span class="lbl" id="r-h-lbl">час</span></div>
+          <div class="col"><span class="num" id="r-m">00</span><span class="lbl" id="r-m-lbl">мин</span></div>
+          <div class="col"><span class="num" id="r-s">00</span><span class="lbl" id="r-s-lbl">сек</span></div>
+        </div>
+        <div class="done-msg" id="r-done">ДОЖДАЛИСЬ! ИГРА ВЫШЛА 🎉</div>
+        <div class="card-footer">
+          <span class="exact-info">18 ноября • 21:30</span>
+          <button class="btn-cal" onclick="addToCalendar('release')">
+            <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"/></svg>
+            В календарь
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. ПРЕДЗАГРУЗКА (09.11 в 21:30) -->
+      <div class="card card-preload">
+        <div class="card-top">
+          <span class="title">⚡ Предзагрузка</span>
+          <span class="badge" id="p-badge">09.11 в 21:30</span>
+        </div>
+        <div class="digits" id="p-timer">
+          <div class="col"><span class="num" id="p-d">00</span><span class="lbl" id="p-d-lbl">дн</span></div>
+          <div class="col"><span class="num" id="p-h">00</span><span class="lbl" id="p-h-lbl">час</span></div>
+          <div class="col"><span class="num" id="p-m">00</span><span class="lbl" id="p-m-lbl">мин</span></div>
+          <div class="col"><span class="num" id="p-s">00</span><span class="lbl" id="p-s-lbl">сек</span></div>
+        </div>
+        <div class="done-msg" id="p-done">ЗАГРУЗКА ДОСТУПНА ⚡</div>
+        <div class="card-footer">
+          <span class="exact-info">9 ноября • 21:30</span>
+          <button class="btn-cal" onclick="addToCalendar('preload')">
+            <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"/></svg>
+            В календарь
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="footer">
+      Grand Theft Auto VI Countdown • Rockstar Games
+    </footer>
+
+  </div>
+
+  <script>
+    const year = new Date().getFullYear();
+    function targetDate(d, h, m) {
+      let t = new Date(year, 10, d, h, m, 0); // 10 = Ноябрь
+      if (new Date() - t > 30 * 86400000) t = new Date(year + 1, 10, d, h, m, 0);
+      return t;
+    }
+
+    const PRELOAD = targetDate(9, 21, 30);
+    const RELEASE = targetDate(18, 21, 30);
+    const pad = n => n < 10 ? '0' + n : n;
+
+    function declOfNum(n, titles) {
+      const cases = [2, 0, 1, 1, 1, 2];
+      return titles[(n % 100 > 4 && n % 100 < 20) ? 2 : cases[(n % 10 < 5) ? n % 10 : 5]];
+    }
+
+    const wDays = ['день', 'дня', 'дней'];
+    const wHours = ['час', 'часа', 'часов'];
+    const wMins = ['мин', 'мин', 'мин'];
+    const wSecs = ['сек', 'сек', 'сек'];
+
+    let confettiFired = false;
+
+    function renderTimer(prefix, target, badgeId, isRelease) {
+      const diff = target - new Date();
+      if (diff <= 0) {
+        document.getElementById(prefix + '-timer').style.display = 'none';
+        document.getElementById(prefix + '-done').style.display = 'block';
+        document.getElementById(badgeId).innerText = isRelease ? 'Игра вышла!' : 'Загрузка активна';
+        if (isRelease && !confettiFired && typeof confetti === 'function') {
+          confettiFired = true;
+          confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+        }
+        return;
+      }
+
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+
+      document.getElementById(prefix + '-d').innerText = pad(d);
+      document.getElementById(prefix + '-h').innerText = pad(h);
+      document.getElementById(prefix + '-m').innerText = pad(m);
+      document.getElementById(prefix + '-s').innerText = pad(s);
+
+      document.getElementById(prefix + '-d-lbl').innerText = declOfNum(d, wDays);
+      document.getElementById(prefix + '-h-lbl').innerText = declOfNum(h, wHours);
+      document.getElementById(prefix + '-m-lbl').innerText = declOfNum(m, wMins);
+      document.getElementById(prefix + '-s-lbl').innerText = declOfNum(s, wSecs);
+    }
+
+    function tick() {
+      renderTimer('r', RELEASE, 'r-badge', true);
+      renderTimer('p', PRELOAD, 'p-badge', false);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+
+    // .ics Export
+    function addToCalendar(type) {
+      const isRel = type === 'release';
+      const target = isRel ? RELEASE : PRELOAD;
+      const title = isRel ? 'GTA VI — Релиз игры!' : 'GTA VI — Старт предзагрузки!';
+      const desc = isRel ? 'Официальный релиз Grand Theft Auto VI в 21:30.' : 'Предзагрузка GTA VI доступна в 21:30.';
+      const end = new Date(target.getTime() + 2 * 3600000);
+      const fmt = d => d.toISOString().replace(/-|:|\.\d+/g, '');
+
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//GTA6 Countdown//RU',
+        'BEGIN:VEVENT',
+        `SUMMARY:${title}`,
+        `DESCRIPTION:${desc}`,
+        `DTSTART:${fmt(target)}`,
+        `DTEND:${fmt(end)}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = isRel ? 'GTA6_Release.ics' : 'GTA6_Preload.ics';
+      a.click();
+    }
+  </script>
+</body>
+</html>

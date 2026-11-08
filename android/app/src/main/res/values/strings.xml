@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GTA VI Countdown</string>
+    <string name="title_game">Grand Theft Auto VI</string>
+    <string name="release_title">Релиз игры</string>
+    <string name="release_date_label">18 ноября • 21:30</string>
+    <string name="preload_title">Предзагрузка</string>
+    <string name="preload_date_label">9 ноября • 21:30</string>
+    <string name="unit_days">ДН</string>
+    <string name="unit_hours">ЧАС</string>
+    <string name="unit_mins">МИН</string>
+    <string name="unit_secs">СЕК</string>
+    <string name="status_preload_active">⚡ Загрузка активна!</string>
+    <string name="status_released">🎉 Игра доступна!</string>
+    <string name="toggle_preload_title">Скрыть предзагрузку</string>
+    <string name="toggle_preload_desc">Отключить блок предзагрузки в приложении и виджете 2х2</string>
+    <string name="widget_2x2_title">GTA VI • Полный таймер 2х2</string>
+    <string name="widget_1x2_title">GTA VI • До релиза 1х2</string>
+    <string name="btn_add_widget_2x2">Добавить виджет 2х2 на экран</string>
+    <string name="btn_add_widget_1x2">Добавить виджет 1х2 на экран</string>
+    <string name="widget_instructions">Удерживайте палец на рабочем столе телефона, перейдите в «Виджеты» и выберите GTA VI Countdown.</string>
+</resources>
