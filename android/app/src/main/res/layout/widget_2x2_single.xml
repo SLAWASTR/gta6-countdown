@@ -64,7 +64,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_baseline"
+            android:gravity="center"
             android:orientation="horizontal">
 
             <TextView
