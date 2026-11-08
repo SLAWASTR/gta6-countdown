@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +36,10 @@ public class MainActivity extends AppCompatActivity {
 
     // Controls
     private SwitchMaterial switchHidePreload;
-    private MaterialButton btnPin2x2, btnPin1x2;
+    private SwitchMaterial switchLiveSeconds;
+    private RadioGroup rgWidgetTheme;
+    private RadioButton rbMonochrome, rbLiquidGlass, rbViceCity, rbOled;
+    private MaterialButton btnPin1x1, btnPin1x2, btnPin2x2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         txtPreDone = findViewById(R.id.main_pre_done);
         layoutPreDigits = findViewById(R.id.main_pre_digits_layout);
 
-        // Bind Settings
+        // Bind Preload Settings
         switchHidePreload = findViewById(R.id.switch_hide_preload);
         boolean isHidden = WidgetHelper.isPreloadHidden(this);
         switchHidePreload.setChecked(isHidden);
@@ -69,12 +74,58 @@ public class MainActivity extends AppCompatActivity {
             cardPreload.setVisibility(isChecked ? View.GONE : View.VISIBLE);
         });
 
-        // Pin Widgets
-        btnPin2x2 = findViewById(R.id.btn_pin_2x2);
-        btnPin1x2 = findViewById(R.id.btn_pin_1x2);
+        // Bind Live Seconds Settings
+        switchLiveSeconds = findViewById(R.id.switch_live_seconds);
+        boolean isLiveEnabled = WidgetHelper.isLiveSecondsEnabled(this);
+        switchLiveSeconds.setChecked(isLiveEnabled);
+        switchLiveSeconds.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            WidgetHelper.setLiveSecondsEnabled(MainActivity.this, isChecked);
+        });
 
-        btnPin2x2.setOnClickListener(v -> pinWidget(WidgetProvider2x2.class));
+        // Bind Theme RadioGroup
+        rgWidgetTheme = findViewById(R.id.rg_widget_theme);
+        rbMonochrome = findViewById(R.id.rb_theme_monochrome);
+        rbLiquidGlass = findViewById(R.id.rb_theme_liquid_glass);
+        rbViceCity = findViewById(R.id.rb_theme_vice_city);
+        rbOled = findViewById(R.id.rb_theme_oled);
+
+        int currentTheme = WidgetHelper.getThemeMode(this);
+        switch (currentTheme) {
+            case WidgetHelper.THEME_LIQUID_GLASS:
+                rbLiquidGlass.setChecked(true);
+                break;
+            case WidgetHelper.THEME_VICE_CITY:
+                rbViceCity.setChecked(true);
+                break;
+            case WidgetHelper.THEME_OLED:
+                rbOled.setChecked(true);
+                break;
+            case WidgetHelper.THEME_MONOCHROME:
+            default:
+                rbMonochrome.setChecked(true);
+                break;
+        }
+
+        rgWidgetTheme.setOnCheckedChangeListener((group, checkedId) -> {
+            int selectedTheme = WidgetHelper.THEME_MONOCHROME;
+            if (checkedId == R.id.rb_theme_liquid_glass) {
+                selectedTheme = WidgetHelper.THEME_LIQUID_GLASS;
+            } else if (checkedId == R.id.rb_theme_vice_city) {
+                selectedTheme = WidgetHelper.THEME_VICE_CITY;
+            } else if (checkedId == R.id.rb_theme_oled) {
+                selectedTheme = WidgetHelper.THEME_OLED;
+            }
+            WidgetHelper.setThemeMode(MainActivity.this, selectedTheme);
+        });
+
+        // Pin Widgets
+        btnPin1x1 = findViewById(R.id.btn_pin_1x1);
+        btnPin1x2 = findViewById(R.id.btn_pin_1x2);
+        btnPin2x2 = findViewById(R.id.btn_pin_2x2);
+
+        btnPin1x1.setOnClickListener(v -> pinWidget(WidgetProvider1x1.class));
         btnPin1x2.setOnClickListener(v -> pinWidget(WidgetProvider1x2.class));
+        btnPin2x2.setOnClickListener(v -> pinWidget(WidgetProvider2x2.class));
 
         // Start live ticker
         ticker = new Runnable() {
@@ -90,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         handler.post(ticker);
+        WidgetHelper.startLiveTickerIfEnabled(this);
         WidgetHelper.updateAllWidgets(this);
     }
 

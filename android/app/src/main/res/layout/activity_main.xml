@@ -400,7 +400,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- CARD 3: SETTINGS & MANUAL PRELOAD TOGGLE -->
+        <!-- CARD 3: SETTINGS -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -417,6 +417,51 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
+                <!-- Live Seconds Toggle -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginEnd="56dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/toggle_live_seconds_title"
+                            android:textColor="@color/text_white"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/toggle_live_seconds_desc"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_live_seconds"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginBottom="14dp"
+                    android:background="@color/border_white" />
+
+                <!-- Preload Toggle -->
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
@@ -455,6 +500,77 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- CARD 3.5: THEME SELECTION -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="@color/border_white"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="@string/theme_section_title"
+                    android:textColor="@color/text_white"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <RadioGroup
+                    android:id="@+id/rg_widget_theme"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/rb_theme_monochrome"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:text="@string/theme_monochrome"
+                        android:textColor="@color/text_white"
+                        android:textSize="13sp" />
+
+                    <RadioButton
+                        android:id="@+id/rb_theme_liquid_glass"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:text="@string/theme_liquid_glass"
+                        android:textColor="@color/text_white"
+                        android:textSize="13sp" />
+
+                    <RadioButton
+                        android:id="@+id/rb_theme_vice_city"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:text="@string/theme_vice_city"
+                        android:textColor="@color/text_white"
+                        android:textSize="13sp" />
+
+                    <RadioButton
+                        android:id="@+id/rb_theme_oled"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:text="@string/theme_oled"
+                        android:textColor="@color/text_white"
+                        android:textSize="13sp" />
+                </RadioGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- CARD 4: HOME SCREEN WIDGETS -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -490,20 +606,23 @@
                     android:textSize="12sp" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_pin_2x2"
+                    android:id="@+id/btn_pin_1x1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:backgroundTint="@color/accent_pink"
-                    android:text="@string/btn_add_widget_2x2"
+                    android:backgroundTint="@color/card_inner_dark"
+                    android:text="@string/btn_add_widget_1x1"
                     android:textAllCaps="false"
                     android:textColor="@color/text_white"
-                    app:cornerRadius="12dp" />
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/border_white"
+                    app:strokeWidth="1dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_pin_1x2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:backgroundTint="@color/card_inner_dark"
                     android:text="@string/btn_add_widget_1x2"
                     android:textAllCaps="false"
@@ -511,6 +630,16 @@
                     app:cornerRadius="12dp"
                     app:strokeColor="@color/accent_cyan"
                     app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_pin_2x2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/accent_pink"
+                    android:text="@string/btn_add_widget_2x2"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_white"
+                    app:cornerRadius="12dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

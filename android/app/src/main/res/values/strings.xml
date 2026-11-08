@@ -14,9 +14,18 @@
     <string name="status_released">🎉 Игра доступна!</string>
     <string name="toggle_preload_title">Скрыть предзагрузку</string>
     <string name="toggle_preload_desc">Отключить блок предзагрузки в приложении и виджете 2х2</string>
+    <string name="toggle_live_seconds_title">Живые секунды на виджетах</string>
+    <string name="toggle_live_seconds_desc">Плавный посекундный отсчет в реальном времени пока экран включен</string>
+    <string name="theme_section_title">Стиль оформления виджетов</string>
+    <string name="theme_monochrome">Монохром (матовый графит, как на фото)</string>
+    <string name="theme_liquid_glass">Liquid Glass (матовое стекло 65–75%)</string>
+    <string name="theme_vice_city">Vice City Неон</string>
+    <string name="theme_oled">OLED Чистый черный</string>
+    <string name="widget_1x1_title">GTA VI • Мини 1х1</string>
+    <string name="widget_1x2_title">GTA VI • Монохром 1х2</string>
     <string name="widget_2x2_title">GTA VI • Полный таймер 2х2</string>
-    <string name="widget_1x2_title">GTA VI • До релиза 1х2</string>
-    <string name="btn_add_widget_2x2">Добавить виджет 2х2 на экран</string>
+    <string name="btn_add_widget_1x1">Добавить виджет 1х1 на экран</string>
     <string name="btn_add_widget_1x2">Добавить виджет 1х2 на экран</string>
+    <string name="btn_add_widget_2x2">Добавить виджет 2х2 на экран</string>
     <string name="widget_instructions">Удерживайте палец на рабочем столе телефона, перейдите в «Виджеты» и выберите GTA VI Countdown.</string>
 </resources>

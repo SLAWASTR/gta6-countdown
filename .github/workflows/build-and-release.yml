@@ -139,10 +139,13 @@ jobs:
             Multiplatform release of the GTA VI countdown widget and application:
             
             - 📱 **Android**: `GTA6Countdown-Android.apk`
-              - 2x2 Home Screen Widget (Full countdown: Release + Preload)
-              - 1x2 Home Screen Widget (Compact countdown: Release only)
+              - **1x1 Mini Widget**: Days, GTA VI label, Gamepad icon, live time pill (HH:MM:SS)
+              - **1x2 Monochrome Widget**: Big days counter, GTA VI, gamepad icon, live hours:minutes:seconds
+              - **2x2 Widget**: Full countdown (Release + Preload toggleable)
+              - **Multiple Themes**: Monochrome Matte (matching screenshot), Liquid Glass (65-75% frosted blur), Vice City Neon, OLED Black
+              - **Live Seconds Service**: Real-time ticking when screen is active without battery drain
               - In-app toggle: Manually hide/disable the preload timer
-              - One-tap Pin Widget to home screen
+              - One-tap Pin Widgets directly to home screen
             - 🪟 **Windows**: `GTA6Countdown-Windows.zip`
               - Native WPF desktop widget pinned to wallpaper
               - Freeform resize & context menu

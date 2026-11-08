@@ -19,6 +19,43 @@
             </intent-filter>
         </activity>
 
+        <!-- Live Ticker Service for seconds -->
+        <service
+            android:name=".WidgetUpdateService"
+            android:exported="false" />
+
+        <!-- Widget 1x1: Mini (как вверху на скриншоте) -->
+        <receiver
+            android:name=".WidgetProvider1x1"
+            android:exported="true"
+            android:label="@string/widget_1x1_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.slawastr.gta6countdown.ACTION_REFRESH" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_1x1" />
+        </receiver>
+
+        <!-- Widget 1x2: Monochrome / Liquid Glass Countdown -->
+        <receiver
+            android:name=".WidgetProvider1x2"
+            android:exported="true"
+            android:label="@string/widget_1x2_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.slawastr.gta6countdown.ACTION_REFRESH" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_1x2" />
+        </receiver>
+
         <!-- Widget 2x2: Full Countdown (Release + Preload) -->
         <receiver
             android:name=".WidgetProvider2x2"
@@ -33,22 +70,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_info_2x2" />
-        </receiver>
-
-        <!-- Widget 1x2: Compact Countdown (Release Only) -->
-        <receiver
-            android:name=".WidgetProvider1x2"
-            android:exported="true"
-            android:label="@string/widget_1x2_title">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.slawastr.gta6countdown.ACTION_REFRESH" />
-                <action android:name="android.intent.action.TIME_SET" />
-                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info_1x2" />
         </receiver>
 
     </application>
