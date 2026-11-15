@@ -20,11 +20,6 @@ struct VisualEffectBackground: NSViewRepresentable {
 // MARK: - Live Countdown Data Model
 class CountdownModel: ObservableObject {
     @Published var now = Date()
-    @Published var hidePreload: Bool = UserDefaults.standard.bool(forKey: "hidePreload") {
-        didSet {
-            UserDefaults.standard.set(hidePreload, forKey: "hidePreload")
-        }
-    }
     private var timerCancellable: AnyCancellable?
 
     init() {
@@ -47,35 +42,23 @@ class CountdownModel: ObservableObject {
         return date
     }
 
-    var preloadDate: Date {
-        let cal = Calendar.current
-        let year = cal.component(.year, from: now)
-        var comp = DateComponents(year: year, month: 11, day: 9, hour: 21, minute: 30, second: 0)
-        var date = cal.date(from: comp) ?? now
-        if now.timeIntervalSince(date) > 30 * 86400 {
-            comp.year = year + 1
-            date = cal.date(from: comp) ?? now
-        }
-        return date
-    }
-
-    func timeParts(for target: Date) -> (isDone: Bool, d: String, h: String, m: String, s: String, daysInt: Int) {
+    func timeParts(for target: Date) -> (isDone: Bool, days: Int, totalHours: Int, hoursStr: String, minsStr: String, secsStr: String) {
         let diff = target.timeIntervalSince(now)
         if diff <= 0 {
-            return (true, "00", "00", "00", "00", 0)
+            return (true, 0, 0, "00", "00", "00")
         }
         let total = Int(diff)
         let days = total / 86400
-        let hours = (total % 86400) / 3600
+        let totalHours = total / 3600
         let mins = (total % 3600) / 60
         let secs = total % 60
         return (
             false,
-            String(format: "%02d", days),
-            String(format: "%02d", hours),
+            days,
+            totalHours,
+            "\(totalHours)",
             String(format: "%02d", mins),
-            String(format: "%02d", secs),
-            days
+            String(format: "%02d", secs)
         )
     }
 }
@@ -114,7 +97,6 @@ struct CountdownCard: View {
     let dateStr: String
     let isDone: Bool
     let doneText: String
-    let days: String
     let hours: String
     let mins: String
     let secs: String
@@ -152,10 +134,9 @@ struct CountdownCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
             } else {
                 HStack(spacing: 3) {
-                    DigitBox(value: days, unit: "ДН")
-                    DigitBox(value: hours, unit: "ЧАС")
-                    DigitBox(value: mins, unit: "МИН")
-                    DigitBox(value: secs, unit: "СЕК")
+                    DigitBox(value: hours, unit: "ЧАСОВ", accentColor: accentColor)
+                    DigitBox(value: mins, unit: "МИНУТ")
+                    DigitBox(value: secs, unit: "СЕКУНД")
                 }
             }
         }
@@ -184,7 +165,6 @@ struct GTAFluidWidgetView: View {
 
     var body: some View {
         let r = model.timeParts(for: model.releaseDate)
-        let p = model.timeParts(for: model.preloadDate)
 
         ZStack {
             // Native live wallpaper blur
@@ -204,6 +184,11 @@ struct GTAFluidWidgetView: View {
                 // Top section (Weather Widget Metaphor)
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 1) {
+                        Text(r.days == 0 ? "⚡ ФИНАЛЬНЫЙ ДЕНЬ ДО РЕЛИЗА" : "⚡ ОСТАЛОСЬ: \(r.days) ДН ДО РЕЛИЗА")
+                            .font(.system(size: 9.5, weight: .bold))
+                            .lineLimit(1)
+                            .foregroundColor(Color(red: 1.0, green: 0.35, blue: 0.65))
+
                         Text("Grand Theft Auto VI")
                             .font(.system(size: 13, weight: .semibold))
                             .lineLimit(1)
@@ -211,17 +196,17 @@ struct GTAFluidWidgetView: View {
                             .foregroundColor(.white.opacity(0.9))
                         
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(r.isDone ? "0" : "\(r.daysInt)")
+                            Text(r.isDone ? "0" : "\(r.totalHours)")
                                 .font(.system(size: 38, weight: .light, design: .rounded))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
                                 .foregroundColor(.white)
                             VStack(alignment: .leading, spacing: 0) {
-                                Text("ДНЕЙ")
+                                Text("ЧАСОВ")
                                     .font(.system(size: 9.5, weight: .bold))
                                     .lineLimit(1)
                                     .foregroundColor(.white.opacity(0.8))
-                                Text(r.isDone ? "игра вышла!" : "до релиза")
+                                Text(r.isDone ? "игра вышла!" : "до выхода")
                                     .font(.system(size: 8.5, weight: .medium))
                                     .lineLimit(1)
                                     .foregroundColor(.white.opacity(0.55))
@@ -244,13 +229,6 @@ struct GTAFluidWidgetView: View {
                             .font(.system(size: 10, weight: .semibold))
                             .lineLimit(1)
                             .foregroundColor(.white.opacity(0.85))
-                        
-                        HStack(spacing: 2) {
-                            Text(p.isDone ? "⚡ Загрузка активна" : "⚡ Загрузка: 9.11")
-                                .font(.system(size: 9, weight: .semibold))
-                                .lineLimit(1)
-                                .foregroundColor(p.isDone ? Color(red: 0.2, green: 1.0, blue: 0.6) : Color(red: 0.2, green: 0.85, blue: 1.0))
-                        }
                     }
                 }
                 .padding(.horizontal, 2)
@@ -260,35 +238,18 @@ struct GTAFluidWidgetView: View {
                     .fill(Color.white.opacity(0.12))
                     .frame(height: 0.5)
                 
-                // Bottom section (Two compact countdown capsules)
-                HStack(spacing: 8) {
-                    CountdownCard(
-                        title: "РЕЛИЗ",
-                        icon: "🚀",
-                        dateStr: "18.11",
-                        isDone: r.isDone,
-                        doneText: "ИГРА ВЫШЛА! 🎉",
-                        days: r.d,
-                        hours: r.h,
-                        mins: r.m,
-                        secs: r.s,
-                        accentColor: Color(red: 1.0, green: 0.28, blue: 0.6)
-                    )
-                    if !model.hidePreload {
-                        CountdownCard(
-                            title: "ЗАГРУЗКА",
-                            icon: "⚡",
-                            dateStr: "09.11",
-                            isDone: p.isDone,
-                            doneText: "ДОСТУПНА! ⚡",
-                            days: p.d,
-                            hours: p.h,
-                            mins: p.m,
-                            secs: p.s,
-                            accentColor: Color(red: 0.2, green: 0.85, blue: 1.0)
-                        )
-                    }
-                }
+                // Bottom section (Hourly countdown capsule)
+                CountdownCard(
+                    title: "ОБРАТНЫЙ ОТСЧЕТ",
+                    icon: "🚀",
+                    dateStr: "18.11.2026 • 21:30",
+                    isDone: r.isDone,
+                    doneText: "ИГРА ВЫШЛА! 🎉",
+                    hours: r.hoursStr,
+                    mins: r.minsStr,
+                    secs: r.secsStr,
+                    accentColor: Color(red: 1.0, green: 0.28, blue: 0.6)
+                )
                 .frame(maxHeight: .infinity)
             }
             .padding(11)
@@ -458,11 +419,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         lockItem.state = isLocked ? .on : .off
         menu.addItem(lockItem)
 
-        let preloadItem = NSMenuItem(title: "⚡ Показывать таймер предзагрузки", action: #selector(togglePreload), keyEquivalent: "")
-        preloadItem.target = self
-        preloadItem.state = model.hidePreload ? .off : .on
-        menu.addItem(preloadItem)
-
         menu.addItem(NSMenuItem.separator())
 
         let quitItem = NSMenuItem(title: "Закрыть виджет", action: #selector(quitApp), keyEquivalent: "")
@@ -485,10 +441,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         isLocked.toggle()
         hostingView.isDraggingLocked = isLocked
         window.isMovableByWindowBackground = !isLocked
-    }
-
-    @objc func togglePreload() {
-        model.hidePreload.toggle()
     }
 
     @objc func quitApp() {

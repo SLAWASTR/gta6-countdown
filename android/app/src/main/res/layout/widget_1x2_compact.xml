@@ -6,6 +6,18 @@
     android:background="@drawable/bg_widget_monochrome"
     android:padding="10dp">
 
+    <!-- Top Left Days -->
+    <TextView
+        android:id="@+id/txt_1x2_days_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:text="3 ДН"
+        android:textColor="@color/accent_pink"
+        android:textSize="9.5sp"
+        android:textStyle="bold" />
+
     <!-- Top Right Gamepad Icon -->
     <ImageView
         android:id="@+id/img_1x2_gamepad"
@@ -17,7 +29,7 @@
         android:contentDescription="@string/app_name"
         android:src="@drawable/ic_gamepad" />
 
-    <!-- Center: Big Number and GTA VI -->
+    <!-- Center: Big Hours and GTA VI -->
     <LinearLayout
         android:id="@+id/layout_1x2_hero"
         android:layout_width="wrap_content"
@@ -27,11 +39,11 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/txt_1x2_days"
+            android:id="@+id/txt_1x2_hours"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
-            android:text="10"
+            android:text="71"
             android:textColor="@color/text_white"
             android:textSize="32sp"
             android:textStyle="bold" />
@@ -41,7 +53,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:letterSpacing="0.05"
-            android:text="GTA VI"
+            android:text="ЧАСОВ • GTA VI"
             android:textColor="@color/text_white"
             android:textSize="11sp"
             android:textStyle="bold" />
@@ -59,7 +71,7 @@
         android:paddingTop="2dp"
         android:paddingEnd="6dp"
         android:paddingBottom="2dp"
-        android:text="10:45:36"
+        android:text="26:15"
         android:textColor="@color/text_white"
         android:textSize="10sp"
         android:textStyle="bold" />

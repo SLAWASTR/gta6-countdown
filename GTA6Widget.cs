@@ -58,29 +58,22 @@ public class WidgetWindow : Window {
     private bool isLocked = false;
     private bool isTopmost = false;
 
-    // Target Dates (Release 18.11 21:30, Preload 09.11 21:30)
+    // Target Date (Release 18.11 21:30)
     private DateTime releaseDate;
-    private DateTime preloadDate;
 
     // UI Controls
+    private TextBlock txtTopDays;
     private TextBlock txtDaysBig;
+    private TextBlock txtDaysLbl;
     private TextBlock txtDaysSub;
-    private TextBlock txtPreloadStatus;
 
     // Release digits
-    private TextBlock rD, rH, rM, rS;
+    private TextBlock rH, rM, rS;
     private Border rDoneBox;
     private UniformGrid rGrid;
 
-    // Preload digits
-    private TextBlock pD, pH, pM, pS;
-    private Border pDoneBox;
-    private UniformGrid pGrid;
-
-    // Card borders & toggle
+    // Card border
     private Border cardRelease;
-    private Border cardPreload;
-    private bool hidePreload = false;
 
     private readonly string configFile = "widget_config.txt";
 
@@ -92,16 +85,11 @@ public class WidgetWindow : Window {
         this.ShowInTaskbar = false;
         this.ResizeMode = ResizeMode.NoResize;
 
-        // Calculate Target Dates
+        // Calculate Target Date
         int currentYear = DateTime.Now.Year;
         releaseDate = new DateTime(currentYear, 11, 18, 21, 30, 0);
         if (DateTime.Now - releaseDate > TimeSpan.FromDays(30)) {
             releaseDate = new DateTime(currentYear + 1, 11, 18, 21, 30, 0);
-        }
-
-        preloadDate = new DateTime(currentYear, 11, 9, 21, 30, 0);
-        if (DateTime.Now - preloadDate > TimeSpan.FromDays(30)) {
-            preloadDate = new DateTime(currentYear + 1, 11, 9, 21, 30, 0);
         }
 
         // Default dimensions (Exact Apple Medium Widget 342 × 158)
@@ -256,8 +244,18 @@ public class WidgetWindow : Window {
         topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        // Top Left: Title & Big Days
+        // Top Left: Days on top, Title & Big Total Hours
         var leftStack = new StackPanel();
+        txtTopDays = new TextBlock {
+            Text = "⚡ 3 ДНЯ ДО РЕЛИЗА",
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = 9.5,
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(Color.FromRgb(255, 89, 167)),
+            Margin = new Thickness(0, 0, 0, 1)
+        };
+        leftStack.Children.Add(txtTopDays);
+
         var txtTitle = new TextBlock {
             Text = "Grand Theft Auto VI",
             FontFamily = new FontFamily("Segoe UI"),
@@ -272,7 +270,7 @@ public class WidgetWindow : Window {
             Margin = new Thickness(0, 1, 0, 0)
         };
         txtDaysBig = new TextBlock {
-            Text = "10",
+            Text = "71",
             FontFamily = new FontFamily("Segoe UI"),
             FontSize = 38,
             FontWeight = FontWeights.Light,
@@ -285,8 +283,8 @@ public class WidgetWindow : Window {
             Margin = new Thickness(4, 0, 0, 4),
             VerticalAlignment = VerticalAlignment.Bottom
         };
-        var txtDaysLbl = new TextBlock {
-            Text = "ДНЕЙ",
+        txtDaysLbl = new TextBlock {
+            Text = "ЧАСОВ",
             FontFamily = new FontFamily("Segoe UI"),
             FontSize = 9.5,
             FontWeight = FontWeights.Bold,
@@ -306,7 +304,7 @@ public class WidgetWindow : Window {
         Grid.SetColumn(leftStack, 0);
         topGrid.Children.Add(leftStack);
 
-        // Top Right: Official Logo & Dates
+        // Top Right: Official Logo & Date
         var rightStack = new StackPanel {
             HorizontalAlignment = HorizontalAlignment.Right
         };
@@ -332,16 +330,6 @@ public class WidgetWindow : Window {
         };
         rightStack.Children.Add(txtRelDate);
 
-        txtPreloadStatus = new TextBlock {
-            Text = "⚡ Загрузка: 9.11",
-            FontFamily = new FontFamily("Segoe UI"),
-            FontSize = 9,
-            FontWeight = FontWeights.SemiBold,
-            Foreground = new SolidColorBrush(Color.FromRgb(51, 214, 255)),
-            HorizontalAlignment = HorizontalAlignment.Right
-        };
-        rightStack.Children.Add(txtPreloadStatus);
-
         Grid.SetColumn(rightStack, 1);
         topGrid.Children.Add(rightStack);
 
@@ -357,33 +345,16 @@ public class WidgetWindow : Window {
         Grid.SetRow(divider, 1);
         mainGrid.Children.Add(divider);
 
-        // ROW 2: Bottom Section (Two Countdown Cards)
-        var bottomGrid = new Grid();
-        bottomGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        bottomGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-        // CARD 1: RELEASE (18.11)
-        cardRelease = CreateCountdownCard("🚀 РЕЛИЗ", "18.11", Color.FromRgb(255, 59, 136), out rD, out rH, out rM, out rS, out rDoneBox, out rGrid, "ИГРА ВЫШЛА! 🎉");
-        cardRelease.Margin = new Thickness(0, 0, 4, 0);
-        Grid.SetColumn(cardRelease, 0);
-        bottomGrid.Children.Add(cardRelease);
-
-        // CARD 2: PRELOAD (09.11)
-        cardPreload = CreateCountdownCard("⚡ ЗАГРУЗКА", "09.11", Color.FromRgb(0, 242, 254), out pD, out pH, out pM, out pS, out pDoneBox, out pGrid, "ДОСТУПНА! ⚡");
-        cardPreload.Margin = new Thickness(4, 0, 0, 0);
-        Grid.SetColumn(cardPreload, 1);
-        bottomGrid.Children.Add(cardPreload);
-
-        Grid.SetRow(bottomGrid, 2);
-        mainGrid.Children.Add(bottomGrid);
-
-        UpdatePreloadVisibility(hidePreload);
+        // ROW 2: Bottom Section (Hourly Countdown Card)
+        cardRelease = CreateCountdownCard("🚀 ОБРАТНЫЙ ОТСЧЕТ", "18.11.2026 • 21:30", Color.FromRgb(255, 59, 136), out rH, out rM, out rS, out rDoneBox, out rGrid, "ИГРА ВЫШЛА! 🎉");
+        Grid.SetRow(cardRelease, 2);
+        mainGrid.Children.Add(cardRelease);
 
         outerBorder.Child = mainGrid;
         this.Content = outerBorder;
     }
 
-    private Border CreateCountdownCard(string title, string dateStr, Color accentColor, out TextBlock tbD, out TextBlock tbH, out TextBlock tbM, out TextBlock tbS, out Border doneBox, out UniformGrid grid, string doneText) {
+    private Border CreateCountdownCard(string title, string dateStr, Color accentColor, out TextBlock tbH, out TextBlock tbM, out TextBlock tbS, out Border doneBox, out UniformGrid grid, string doneText) {
         var cardBorder = new Border {
             Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0)),
             CornerRadius = new CornerRadius(10),
@@ -416,14 +387,13 @@ public class WidgetWindow : Window {
         stack.Children.Add(headerGrid);
 
         grid = new UniformGrid {
-            Columns = 4,
+            Columns = 3,
             Margin = new Thickness(0, 4, 0, 0)
         };
 
-        grid.Children.Add(CreateDigitBox(out tbD, "ДН", accentColor));
-        grid.Children.Add(CreateDigitBox(out tbH, "ЧАС", Colors.White));
-        grid.Children.Add(CreateDigitBox(out tbM, "МИН", Colors.White));
-        grid.Children.Add(CreateDigitBox(out tbS, "СЕК", Colors.White));
+        grid.Children.Add(CreateDigitBox(out tbH, "ЧАСОВ", accentColor));
+        grid.Children.Add(CreateDigitBox(out tbM, "МИНУТ", Colors.White));
+        grid.Children.Add(CreateDigitBox(out tbS, "СЕКУНД", Colors.White));
         Grid.SetRow(grid, 1);
         stack.Children.Add(grid);
 
@@ -542,21 +512,6 @@ public class WidgetWindow : Window {
         };
         menu.Items.Add(itemLock);
 
-        // Toggle Preload Timer
-        var itemPreload = new MenuItem {
-            Header = "⚡ Показывать таймер предзагрузки",
-            IsCheckable = true,
-            IsChecked = !hidePreload
-        };
-        itemPreload.Click += (s, e) => {
-            hidePreload = !itemPreload.IsChecked;
-            UpdatePreloadVisibility(hidePreload);
-            SaveConfig();
-        };
-        menu.Items.Add(itemPreload);
-
-        menu.Items.Add(new Separator());
-
         // Close
         var itemClose = new MenuItem { Header = "Закрыть виджет" };
         itemClose.Click += (s, e) => this.Close();
@@ -577,62 +532,42 @@ public class WidgetWindow : Window {
         // Release Diff
         TimeSpan rDiff = releaseDate - now;
         if (rDiff.TotalSeconds <= 0) {
+            txtTopDays.Text = "🎉 РЕЛИЗ СОСТОЯЛСЯ!";
             txtDaysBig.Text = "0";
+            txtDaysLbl.Text = "ЧАСОВ";
             txtDaysSub.Text = "игра вышла!";
             rGrid.Visibility = Visibility.Collapsed;
             rDoneBox.Visibility = Visibility.Visible;
         } else {
             int d = (int)rDiff.TotalDays;
-            txtDaysBig.Text = d.ToString();
+            int totalHours = (int)rDiff.TotalHours;
+
+            if (d == 0) {
+                txtTopDays.Text = "⚡ ФИНАЛЬНЫЙ ДЕНЬ ДО РЕЛИЗА";
+            } else if (d == 1) {
+                txtTopDays.Text = "⚡ ОСТАЛСЯ 1 ДЕНЬ ДО РЕЛИЗА";
+            } else if (d >= 2 && d <= 4) {
+                txtTopDays.Text = string.Format("⚡ ОСТАЛОСЬ {0} ДНЯ ДО РЕЛИЗА", d);
+            } else {
+                txtTopDays.Text = string.Format("⚡ ОСТАЛОСЬ {0} ДНЕЙ ДО РЕЛИЗА", d);
+            }
+
+            txtDaysBig.Text = totalHours.ToString();
+            txtDaysLbl.Text = "ЧАСОВ";
             txtDaysSub.Text = "до релиза";
 
-            rD.Text = d.ToString("D2");
-            rH.Text = rDiff.Hours.ToString("D2");
+            rH.Text = totalHours.ToString();
             rM.Text = rDiff.Minutes.ToString("D2");
             rS.Text = rDiff.Seconds.ToString("D2");
             rGrid.Visibility = Visibility.Visible;
             rDoneBox.Visibility = Visibility.Collapsed;
         }
-
-        // Preload Diff
-        TimeSpan pDiff = preloadDate - now;
-        if (pDiff.TotalSeconds <= 0) {
-            txtPreloadStatus.Text = "⚡ Загрузка активна";
-            txtPreloadStatus.Foreground = new SolidColorBrush(Color.FromRgb(0, 255, 140));
-            pGrid.Visibility = Visibility.Collapsed;
-            pDoneBox.Visibility = Visibility.Visible;
-        } else {
-            txtPreloadStatus.Text = "⚡ Загрузка: 9.11";
-            txtPreloadStatus.Foreground = new SolidColorBrush(Color.FromRgb(51, 214, 255));
-            int pd = (int)pDiff.TotalDays;
-            pD.Text = pd.ToString("D2");
-            pH.Text = pDiff.Hours.ToString("D2");
-            pM.Text = pDiff.Minutes.ToString("D2");
-            pS.Text = pDiff.Seconds.ToString("D2");
-            pGrid.Visibility = Visibility.Visible;
-            pDoneBox.Visibility = Visibility.Collapsed;
-        }
-    }
-
-    private void UpdatePreloadVisibility(bool hide) {
-        if (cardPreload == null || cardRelease == null) return;
-        if (hide) {
-            cardPreload.Visibility = Visibility.Collapsed;
-            Grid.SetColumnSpan(cardRelease, 2);
-            cardRelease.Margin = new Thickness(0);
-            if (txtPreloadStatus != null) txtPreloadStatus.Visibility = Visibility.Collapsed;
-        } else {
-            cardPreload.Visibility = Visibility.Visible;
-            Grid.SetColumnSpan(cardRelease, 1);
-            cardRelease.Margin = new Thickness(0, 0, 4, 0);
-            if (txtPreloadStatus != null) txtPreloadStatus.Visibility = Visibility.Visible;
-        }
     }
 
     private void SaveConfig() {
         try {
-            string line = string.Format("{0};{1};{2};{3};{4};{5};{6}",
-                (int)this.Left, (int)this.Top, (int)this.Width, (int)this.Height, isTopmost ? 1 : 0, isLocked ? 1 : 0, hidePreload ? 1 : 0);
+            string line = string.Format("{0};{1};{2};{3};{4};{5}",
+                (int)this.Left, (int)this.Top, (int)this.Width, (int)this.Height, isTopmost ? 1 : 0, isLocked ? 1 : 0);
             File.WriteAllText(configFile, line);
         } catch { }
     }
@@ -654,10 +589,6 @@ public class WidgetWindow : Window {
 
                     if (parts.Length >= 5) isTopmost = parts[4] == "1";
                     if (parts.Length >= 6) isLocked = parts[5] == "1";
-                    if (parts.Length >= 7) {
-                        hidePreload = parts[6] == "1";
-                        UpdatePreloadVisibility(hidePreload);
-                    }
                 }
             }
         } catch { }

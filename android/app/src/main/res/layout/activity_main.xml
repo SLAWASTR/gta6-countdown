@@ -55,7 +55,7 @@
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -75,14 +75,29 @@
                         android:textSize="12sp" />
                 </RelativeLayout>
 
-                <!-- 4 Digits: Days, Hours, Mins, Secs -->
+                <!-- DAYS ON TOP BANNER -->
+                <TextView
+                    android:id="@+id/main_rel_days_banner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="14dp"
+                    android:background="@drawable/bg_pill_time"
+                    android:gravity="center"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:text="⚡ 3 ДНЯ ДО РЕЛИЗА"
+                    android:textColor="@color/accent_pink"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <!-- 3 Digits: Hours, Mins, Secs -->
                 <LinearLayout
                     android:id="@+id/main_rel_digits_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <!-- Days -->
+                    <!-- Total Hours -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -90,58 +105,28 @@
                         android:background="@drawable/bg_inner_box"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="10dp">
-
-                        <TextView
-                            android:id="@+id/main_rel_days"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00"
-                            android:textColor="@color/text_white"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/unit_days"
-                            android:textColor="@color/text_muted"
-                            android:textSize="10sp" />
-                    </LinearLayout>
-
-                    <Space
-                        android:layout_width="6dp"
-                        android:layout_height="1dp" />
-
-                    <!-- Hours -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_inner_box"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="10dp">
+                        android:padding="12dp">
 
                         <TextView
                             android:id="@+id/main_rel_hours"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="00"
+                            android:text="71"
                             android:textColor="@color/text_white"
-                            android:textSize="26sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/main_rel_hours_lbl"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/unit_hours"
                             android:textColor="@color/text_muted"
-                            android:textSize="10sp" />
+                            android:textSize="11sp" />
                     </LinearLayout>
 
                     <Space
-                        android:layout_width="6dp"
+                        android:layout_width="8dp"
                         android:layout_height="1dp" />
 
                     <!-- Mins -->
@@ -152,7 +137,7 @@
                         android:background="@drawable/bg_inner_box"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="10dp">
+                        android:padding="12dp">
 
                         <TextView
                             android:id="@+id/main_rel_mins"
@@ -160,7 +145,7 @@
                             android:layout_height="wrap_content"
                             android:text="00"
                             android:textColor="@color/text_white"
-                            android:textSize="26sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -168,11 +153,11 @@
                             android:layout_height="wrap_content"
                             android:text="@string/unit_mins"
                             android:textColor="@color/text_muted"
-                            android:textSize="10sp" />
+                            android:textSize="11sp" />
                     </LinearLayout>
 
                     <Space
-                        android:layout_width="6dp"
+                        android:layout_width="8dp"
                         android:layout_height="1dp" />
 
                     <!-- Secs -->
@@ -183,7 +168,7 @@
                         android:background="@drawable/bg_inner_box"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="10dp">
+                        android:padding="12dp">
 
                         <TextView
                             android:id="@+id/main_rel_secs"
@@ -191,7 +176,7 @@
                             android:layout_height="wrap_content"
                             android:text="00"
                             android:textColor="@color/accent_pink"
-                            android:textSize="26sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -199,7 +184,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/unit_secs"
                             android:textColor="@color/text_muted"
-                            android:textSize="10sp" />
+                            android:textSize="11sp" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -217,190 +202,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- CARD 2: PRELOAD COUNTDOWN (TOGGLEABLE) -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_preload_main"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="6dp"
-            app:strokeColor="@color/border_cyan"
-            app:strokeWidth="1.2dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:text="⚡ ПРЕДЗАГРУЗКА"
-                        android:textColor="@color/accent_cyan"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:text="09.11.2026 • 21:30"
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp" />
-                </RelativeLayout>
-
-                <!-- 4 Digits: Days, Hours, Mins, Secs -->
-                <LinearLayout
-                    android:id="@+id/main_pre_digits_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <!-- Days -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_inner_box_cyan"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="10dp">
-
-                        <TextView
-                            android:id="@+id/main_pre_days"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00"
-                            android:textColor="@color/text_white"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/unit_days"
-                            android:textColor="@color/text_muted"
-                            android:textSize="10sp" />
-                    </LinearLayout>
-
-                    <Space
-                        android:layout_width="6dp"
-                        android:layout_height="1dp" />
-
-                    <!-- Hours -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_inner_box_cyan"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="10dp">
-
-                        <TextView
-                            android:id="@+id/main_pre_hours"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00"
-                            android:textColor="@color/text_white"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/unit_hours"
-                            android:textColor="@color/text_muted"
-                            android:textSize="10sp" />
-                    </LinearLayout>
-
-                    <Space
-                        android:layout_width="6dp"
-                        android:layout_height="1dp" />
-
-                    <!-- Mins -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_inner_box_cyan"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="10dp">
-
-                        <TextView
-                            android:id="@+id/main_pre_mins"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00"
-                            android:textColor="@color/text_white"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/unit_mins"
-                            android:textColor="@color/text_muted"
-                            android:textSize="10sp" />
-                    </LinearLayout>
-
-                    <Space
-                        android:layout_width="6dp"
-                        android:layout_height="1dp" />
-
-                    <!-- Secs -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_inner_box_cyan"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="10dp">
-
-                        <TextView
-                            android:id="@+id/main_pre_secs"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00"
-                            android:textColor="@color/accent_cyan"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/unit_secs"
-                            android:textColor="@color/text_muted"
-                            android:textSize="10sp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/main_pre_done"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:padding="16dp"
-                    android:text="@string/status_preload_active"
-                    android:textColor="@color/accent_cyan"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- CARD 3: SETTINGS -->
+        <!-- CARD 2: SETTINGS -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -420,8 +222,7 @@
                 <!-- Live Seconds Toggle -->
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="14dp">
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -449,49 +250,6 @@
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switch_live_seconds"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true" />
-                </RelativeLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginBottom="14dp"
-                    android:background="@color/border_white" />
-
-                <!-- Preload Toggle -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_marginEnd="56dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/toggle_preload_title"
-                            android:textColor="@color/text_white"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/toggle_preload_desc"
-                            android:textColor="@color/text_muted"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_hide_preload"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"

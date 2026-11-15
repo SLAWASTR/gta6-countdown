@@ -19,7 +19,6 @@ import java.util.Map;
 public class WidgetHelper {
 
     public static final String PREFS_NAME = "gta6_prefs";
-    public static final String PREF_HIDE_PRELOAD = "hide_preload";
     public static final String PREF_THEME_MODE = "theme_mode";
     public static final String PREF_LIVE_SECONDS = "live_seconds";
     public static final String ACTION_REFRESH = "com.slawastr.gta6countdown.ACTION_REFRESH";
@@ -30,25 +29,44 @@ public class WidgetHelper {
     public static final int THEME_VICE_CITY = 2;    // Vice City Неон
     public static final int THEME_OLED = 3;         // Чистый черный OLED
 
-    // Target timestamps (MSK: UTC+3)
-    // 2026-11-18 21:30:00 -> 1795026600000 ms
-    // 2026-11-09 21:30:00 -> 1794249000000 ms
+    // Target timestamp: 2026-11-18 21:30:00 MSK (UTC+3) -> 1795026600000L ms
     public static final long TARGET_RELEASE_MS = 1795026600000L;
-    public static final long TARGET_PRELOAD_MS = 1794249000000L;
 
     public static class TimeParts {
         public boolean isDone;
-        public long days;
-        public long hours;
-        public long mins;
-        public long secs;
+        public long days;         // e.g. 2
+        public long totalHours;   // e.g. 71
+        public long hours;        // e.g. 23 (sub-hours)
+        public long mins;         // e.g. 26
+        public long secs;         // e.g. 15
 
-        public String daysStr() { return String.format("%02d", Math.max(0, days)); }
-        public String hoursStr() { return String.format("%02d", Math.max(0, hours)); }
+        public String totalHoursStr() { return String.valueOf(Math.max(0, totalHours)); }
+        public String totalHoursPadded() { return String.format("%02d", Math.max(0, totalHours)); }
+        public String daysStr() { return String.valueOf(Math.max(0, days)); }
         public String minsStr() { return String.format("%02d", Math.max(0, mins)); }
         public String secsStr() { return String.format("%02d", Math.max(0, secs)); }
+
         public String timeOnly() {
-            return String.format("%02d:%02d:%02d", Math.max(0, hours), Math.max(0, mins), Math.max(0, secs));
+            return String.format("%02d:%02d", Math.max(0, mins), Math.max(0, secs));
+        }
+
+        public String daysTopLabel() {
+            if (days <= 0) return "ФИНАЛЬНЫЙ ДЕНЬ ДО РЕЛИЗА";
+            if (days == 1) return "1 ДЕНЬ ДО РЕЛИЗА";
+            if (days >= 2 && days <= 4) return days + " ДНЯ ДО РЕЛИЗА";
+            return days + " ДНЕЙ ДО РЕЛИЗА";
+        }
+
+        public String daysBadge() {
+            if (days <= 0) return "< 1 ДН";
+            return days + " ДН";
+        }
+
+        public String hoursLabel() {
+            long h = totalHours;
+            if (h % 10 == 1 && h % 100 != 11) return "ЧАС";
+            if (h % 10 >= 2 && h % 10 <= 4 && (h % 100 < 10 || h % 100 >= 20)) return "ЧАСА";
+            return "ЧАСОВ";
         }
     }
 
@@ -58,6 +76,7 @@ public class WidgetHelper {
         if (diff <= 0) {
             parts.isDone = true;
             parts.days = 0;
+            parts.totalHours = 0;
             parts.hours = 0;
             parts.mins = 0;
             parts.secs = 0;
@@ -65,10 +84,11 @@ public class WidgetHelper {
         }
 
         parts.isDone = false;
+        parts.totalHours = diff / (3600L * 1000L);
         parts.days = diff / (24L * 3600L * 1000L);
         long remDays = diff % (24L * 3600L * 1000L);
         parts.hours = remDays / (3600L * 1000L);
-        long remHours = remDays % (3600L * 1000L);
+        long remHours = diff % (3600L * 1000L);
         parts.mins = remHours / (60L * 1000L);
         long remMins = remHours % (60L * 1000L);
         parts.secs = remMins / 1000L;
@@ -83,17 +103,6 @@ public class WidgetHelper {
     public static void setThemeMode(Context context, int mode) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         prefs.edit().putInt(PREF_THEME_MODE, mode).apply();
-        updateAllWidgets(context);
-    }
-
-    public static boolean isPreloadHidden(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getBoolean(PREF_HIDE_PRELOAD, false);
-    }
-
-    public static void setPreloadHidden(Context context, boolean hide) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit().putBoolean(PREF_HIDE_PRELOAD, hide).apply();
         updateAllWidgets(context);
     }
 
@@ -180,7 +189,9 @@ public class WidgetHelper {
         int theme = getThemeMode(context);
 
         views.setInt(R.id.widget_1x1_root, "setBackgroundResource", getWidgetBgDrawable(theme));
-        views.setTextViewText(R.id.txt_1x1_days, String.valueOf(rel.days));
+        views.setTextViewText(R.id.txt_1x1_days_top, rel.daysBadge());
+        views.setTextViewText(R.id.txt_1x1_hours, rel.totalHoursStr());
+        views.setTextViewText(R.id.txt_1x1_title, rel.hoursLabel() + " • GTA VI");
         views.setTextViewText(R.id.txt_1x1_time_pill, rel.timeOnly());
 
         Intent intent = new Intent(context, MainActivity.class);
@@ -250,8 +261,10 @@ public class WidgetHelper {
         } else {
             views.setViewVisibility(R.id.layout_1x2_digits, View.VISIBLE);
             views.setViewVisibility(R.id.txt_1x2_done, View.GONE);
-            views.setTextViewText(R.id.txt_1x2_days, String.valueOf(rel.days));
-            views.setTextViewText(R.id.txt_1x2_hours, rel.hoursStr());
+            views.setTextViewText(R.id.txt_1x2_days_top, rel.daysTopLabel());
+            views.setTextViewText(R.id.txt_1x2_hours, rel.totalHoursStr());
+            views.setTextViewText(R.id.txt_1x2_title, rel.hoursLabel() + " • GTA VI");
+            views.setTextViewText(R.id.txt_1x2_box_hours, rel.totalHoursStr());
             views.setTextViewText(R.id.txt_1x2_mins, rel.minsStr());
             views.setTextViewText(R.id.txt_1x2_secs, rel.secsStr()); // SECONDS ALWAYS SHOWN!
         }
@@ -269,7 +282,9 @@ public class WidgetHelper {
         } else {
             views.setViewVisibility(R.id.txt_1x2_pill_time, View.VISIBLE);
             views.setViewVisibility(R.id.txt_1x2_done, View.GONE);
-            views.setTextViewText(R.id.txt_1x2_days, String.valueOf(rel.days));
+            views.setTextViewText(R.id.txt_1x2_days_top, rel.daysBadge());
+            views.setTextViewText(R.id.txt_1x2_hours, rel.totalHoursStr());
+            views.setTextViewText(R.id.txt_1x2_title, rel.hoursLabel() + " • GTA VI");
             views.setTextViewText(R.id.txt_1x2_pill_time, rel.timeOnly()); // LIVE SECONDS!
         }
         views.setOnClickPendingIntent(R.id.widget_1x2_root, pendingIntent);
@@ -281,53 +296,31 @@ public class WidgetHelper {
     }
 
     public static void updateWidget2x2(Context context, AppWidgetManager manager, int appWidgetId, Bundle options) {
-        boolean hidePreload = isPreloadHidden(context);
         long now = System.currentTimeMillis();
         TimeParts rel = calculateTimeParts(TARGET_RELEASE_MS, now);
         int theme = getThemeMode(context);
 
-        RemoteViews views;
-        if (hidePreload) {
-            views = new RemoteViews(context.getPackageName(), R.layout.widget_2x2_single);
-            views.setInt(R.id.widget_root, "setBackgroundResource", getWidgetBgDrawable(theme));
-            if (rel.isDone) {
-                views.setViewVisibility(R.id.grid_rel_digits, View.GONE);
-                views.setViewVisibility(R.id.txt_rel_done, View.VISIBLE);
-            } else {
-                views.setViewVisibility(R.id.grid_rel_digits, View.VISIBLE);
-                views.setViewVisibility(R.id.txt_rel_done, View.GONE);
-                views.setTextViewText(R.id.txt_rel_days, String.valueOf(rel.days));
-                views.setTextViewText(R.id.txt_rel_hours, rel.hoursStr());
-                views.setTextViewText(R.id.txt_rel_mins, rel.minsStr());
-                views.setTextViewText(R.id.txt_rel_secs, rel.secsStr());
-            }
-        } else {
-            views = new RemoteViews(context.getPackageName(), R.layout.widget_2x2);
-            views.setInt(R.id.widget_root, "setBackgroundResource", getWidgetBgDrawable(theme));
-            if (rel.isDone) {
-                views.setViewVisibility(R.id.grid_rel_digits, View.GONE);
-                views.setViewVisibility(R.id.txt_rel_done, View.VISIBLE);
-            } else {
-                views.setViewVisibility(R.id.grid_rel_digits, View.VISIBLE);
-                views.setViewVisibility(R.id.txt_rel_done, View.GONE);
-                views.setTextViewText(R.id.txt_rel_days, rel.daysStr());
-                views.setTextViewText(R.id.txt_rel_hours, rel.hoursStr());
-                views.setTextViewText(R.id.txt_rel_mins, rel.minsStr());
-                views.setTextViewText(R.id.txt_rel_secs, rel.secsStr());
-            }
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_2x2);
+        views.setInt(R.id.widget_root, "setBackgroundResource", getWidgetBgDrawable(theme));
 
-            TimeParts pre = calculateTimeParts(TARGET_PRELOAD_MS, now);
-            if (pre.isDone) {
-                views.setViewVisibility(R.id.grid_pre_digits, View.GONE);
-                views.setViewVisibility(R.id.txt_pre_done, View.VISIBLE);
-            } else {
-                views.setViewVisibility(R.id.grid_pre_digits, View.VISIBLE);
-                views.setViewVisibility(R.id.txt_pre_done, View.GONE);
-                views.setTextViewText(R.id.txt_pre_days, pre.daysStr());
-                views.setTextViewText(R.id.txt_pre_hours, pre.hoursStr());
-                views.setTextViewText(R.id.txt_pre_mins, pre.minsStr());
-                views.setTextViewText(R.id.txt_pre_secs, pre.secsStr());
-            }
+        int innerBox = getInnerBoxDrawable(theme);
+        views.setInt(R.id.box_2x2_hero, "setBackgroundResource", innerBox);
+        views.setInt(R.id.box_2x2_hours, "setBackgroundResource", innerBox);
+        views.setInt(R.id.box_2x2_mins, "setBackgroundResource", innerBox);
+        views.setInt(R.id.box_2x2_secs, "setBackgroundResource", innerBox);
+
+        if (rel.isDone) {
+            views.setViewVisibility(R.id.layout_2x2_content, View.GONE);
+            views.setViewVisibility(R.id.txt_rel_done, View.VISIBLE);
+        } else {
+            views.setViewVisibility(R.id.layout_2x2_content, View.VISIBLE);
+            views.setViewVisibility(R.id.txt_rel_done, View.GONE);
+            views.setTextViewText(R.id.txt_rel_days_top, "⚡ " + rel.daysTopLabel());
+            views.setTextViewText(R.id.txt_rel_hours_hero, rel.totalHoursStr());
+            views.setTextViewText(R.id.txt_rel_hours_unit, rel.hoursLabel());
+            views.setTextViewText(R.id.txt_rel_hours, rel.totalHoursStr());
+            views.setTextViewText(R.id.txt_rel_mins, rel.minsStr());
+            views.setTextViewText(R.id.txt_rel_secs, rel.secsStr());
         }
 
         Intent intent = new Intent(context, MainActivity.class);

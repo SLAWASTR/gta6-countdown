@@ -56,7 +56,7 @@
                 android:resource="@xml/widget_info_1x2" />
         </receiver>
 
-        <!-- Widget 2x2: Full Countdown (Release + Preload) -->
+        <!-- Widget 2x2: Full Hourly Countdown -->
         <receiver
             android:name=".WidgetProvider2x2"
             android:exported="true"

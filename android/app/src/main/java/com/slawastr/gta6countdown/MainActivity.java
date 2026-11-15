@@ -26,16 +26,10 @@ public class MainActivity extends AppCompatActivity {
     private Runnable ticker;
 
     // Release Views
-    private TextView txtRelDays, txtRelHours, txtRelMins, txtRelSecs, txtRelDone;
+    private TextView txtRelDaysBanner, txtRelHours, txtRelHoursLbl, txtRelMins, txtRelSecs, txtRelDone;
     private View layoutRelDigits;
 
-    // Preload Views
-    private TextView txtPreDays, txtPreHours, txtPreMins, txtPreSecs, txtPreDone;
-    private View layoutPreDigits;
-    private MaterialCardView cardPreload;
-
     // Controls
-    private SwitchMaterial switchHidePreload;
     private SwitchMaterial switchLiveSeconds;
     private RadioGroup rgWidgetTheme;
     private RadioButton rbMonochrome, rbLiquidGlass, rbViceCity, rbOled;
@@ -47,32 +41,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Bind Release UI
-        txtRelDays = findViewById(R.id.main_rel_days);
+        txtRelDaysBanner = findViewById(R.id.main_rel_days_banner);
         txtRelHours = findViewById(R.id.main_rel_hours);
+        txtRelHoursLbl = findViewById(R.id.main_rel_hours_lbl);
         txtRelMins = findViewById(R.id.main_rel_mins);
         txtRelSecs = findViewById(R.id.main_rel_secs);
         txtRelDone = findViewById(R.id.main_rel_done);
         layoutRelDigits = findViewById(R.id.main_rel_digits_layout);
-
-        // Bind Preload UI
-        cardPreload = findViewById(R.id.card_preload_main);
-        txtPreDays = findViewById(R.id.main_pre_days);
-        txtPreHours = findViewById(R.id.main_pre_hours);
-        txtPreMins = findViewById(R.id.main_pre_mins);
-        txtPreSecs = findViewById(R.id.main_pre_secs);
-        txtPreDone = findViewById(R.id.main_pre_done);
-        layoutPreDigits = findViewById(R.id.main_pre_digits_layout);
-
-        // Bind Preload Settings
-        switchHidePreload = findViewById(R.id.switch_hide_preload);
-        boolean isHidden = WidgetHelper.isPreloadHidden(this);
-        switchHidePreload.setChecked(isHidden);
-        cardPreload.setVisibility(isHidden ? View.GONE : View.VISIBLE);
-
-        switchHidePreload.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            WidgetHelper.setPreloadHidden(MainActivity.this, isChecked);
-            cardPreload.setVisibility(isChecked ? View.GONE : View.VISIBLE);
-        });
 
         // Bind Live Seconds Settings
         switchLiveSeconds = findViewById(R.id.switch_live_seconds);
@@ -158,30 +133,17 @@ public class MainActivity extends AppCompatActivity {
         WidgetHelper.TimeParts rel = WidgetHelper.calculateTimeParts(WidgetHelper.TARGET_RELEASE_MS, now);
         if (rel.isDone) {
             layoutRelDigits.setVisibility(View.GONE);
+            txtRelDaysBanner.setVisibility(View.GONE);
             txtRelDone.setVisibility(View.VISIBLE);
         } else {
             layoutRelDigits.setVisibility(View.VISIBLE);
+            txtRelDaysBanner.setVisibility(View.VISIBLE);
             txtRelDone.setVisibility(View.GONE);
-            txtRelDays.setText(rel.daysStr());
-            txtRelHours.setText(rel.hoursStr());
+            txtRelDaysBanner.setText("⚡ " + rel.daysTopLabel());
+            txtRelHours.setText(rel.totalHoursStr());
+            txtRelHoursLbl.setText(rel.hoursLabel());
             txtRelMins.setText(rel.minsStr());
             txtRelSecs.setText(rel.secsStr());
-        }
-
-        // Preload
-        if (!switchHidePreload.isChecked()) {
-            WidgetHelper.TimeParts pre = WidgetHelper.calculateTimeParts(WidgetHelper.TARGET_PRELOAD_MS, now);
-            if (pre.isDone) {
-                layoutPreDigits.setVisibility(View.GONE);
-                txtPreDone.setVisibility(View.VISIBLE);
-            } else {
-                layoutPreDigits.setVisibility(View.VISIBLE);
-                txtPreDone.setVisibility(View.GONE);
-                txtPreDays.setText(pre.daysStr());
-                txtPreHours.setText(pre.hoursStr());
-                txtPreMins.setText(pre.minsStr());
-                txtPreSecs.setText(pre.secsStr());
-            }
         }
     }
 

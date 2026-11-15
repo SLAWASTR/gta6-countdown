@@ -35,9 +35,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:letterSpacing="0.05"
-                android:text="GTA VI"
+                android:text="GTA VI • 18.11 в 21:30"
                 android:textColor="@color/text_white"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -52,319 +52,198 @@
             android:src="@drawable/ic_refresh" />
     </RelativeLayout>
 
-    <!-- RELEASE SECTION -->
+    <!-- Content Layout -->
     <LinearLayout
-        android:id="@+id/layout_release"
+        android:id="@+id/layout_2x2_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@drawable/bg_inner_box_monochrome"
-        android:orientation="vertical"
-        android:padding="8dp">
+        android:orientation="vertical">
 
-        <RelativeLayout
+        <!-- Top Days Banner -->
+        <TextView
+            android:id="@+id/txt_rel_days_top"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp">
-
-            <TextView
-                android:id="@+id/lbl_rel_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:text="РЕЛИЗ"
-                android:textColor="@color/text_white"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/lbl_rel_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="18.11 • 21:30"
-                android:textColor="@color/text_muted"
-                android:textSize="10sp" />
-        </RelativeLayout>
-
-        <!-- Release Digits Grid (Days, Hours, Mins, Secs) -->
-        <LinearLayout
-            android:id="@+id/grid_rel_digits"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/bg_pill_time"
             android:gravity="center"
-            android:orientation="horizontal">
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:text="⚡ 3 ДНЯ ДО РЕЛИЗА"
+            android:textColor="@color/accent_pink"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
-            <!-- Days -->
+        <!-- Center Hero Box: Big Hours -->
+        <LinearLayout
+            android:id="@+id/box_2x2_hero"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_inner_box_monochrome"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="8dp">
+
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/txt_rel_days"
+                    android:id="@+id/txt_rel_hours_hero"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="10"
+                    android:includeFontPadding="false"
+                    android:text="71"
                     android:textColor="@color/text_white"
-                    android:textSize="20sp"
+                    android:textSize="48sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/txt_rel_hours_unit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unit_days"
-                    android:textColor="@color/text_muted"
-                    android:textSize="8sp" />
+                    android:layout_marginStart="6dp"
+                    android:includeFontPadding="false"
+                    android:text="@string/unit_hours"
+                    android:textColor="@color/text_white"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Hours -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="до выхода игры"
+                android:textColor="@color/text_muted"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <!-- Bottom Digits Grid (Hours, Mins, Secs) -->
+        <LinearLayout
+            android:id="@+id/grid_rel_digits"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!-- Hours Box -->
             <LinearLayout
+                android:id="@+id/box_2x2_hours"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:background="@drawable/bg_inner_box_monochrome"
                 android:gravity="center"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <TextView
                     android:id="@+id/txt_rel_hours"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="10"
+                    android:includeFontPadding="false"
+                    android:text="71"
                     android:textColor="@color/text_white"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unit_hours"
+                    android:includeFontPadding="false"
+                    android:text="@string/unit_hours_short"
                     android:textColor="@color/text_muted"
-                    android:textSize="8sp" />
+                    android:textSize="9sp" />
             </LinearLayout>
 
-            <!-- Minutes -->
+            <Space
+                android:layout_width="6dp"
+                android:layout_height="1dp" />
+
+            <!-- Mins Box -->
             <LinearLayout
+                android:id="@+id/box_2x2_mins"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:background="@drawable/bg_inner_box_monochrome"
                 android:gravity="center"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <TextView
                     android:id="@+id/txt_rel_mins"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="45"
+                    android:includeFontPadding="false"
+                    android:text="26"
                     android:textColor="@color/text_white"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unit_mins"
+                    android:includeFontPadding="false"
+                    android:text="@string/unit_mins_short"
                     android:textColor="@color/text_muted"
-                    android:textSize="8sp" />
+                    android:textSize="9sp" />
             </LinearLayout>
 
-            <!-- Seconds -->
+            <Space
+                android:layout_width="6dp"
+                android:layout_height="1dp" />
+
+            <!-- Secs Box -->
             <LinearLayout
-                android:id="@+id/box_rel_secs"
+                android:id="@+id/box_2x2_secs"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:background="@drawable/bg_inner_box_monochrome"
                 android:gravity="center"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <TextView
                     android:id="@+id/txt_rel_secs"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="36"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
+                    android:includeFontPadding="false"
+                    android:text="15"
+                    android:textColor="@color/accent_pink"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/unit_secs"
+                    android:includeFontPadding="false"
+                    android:text="@string/unit_secs_short"
                     android:textColor="@color/text_muted"
-                    android:textSize="8sp" />
+                    android:textSize="9sp" />
             </LinearLayout>
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/txt_rel_done"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/status_released"
-            android:textColor="@color/text_white"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
     </LinearLayout>
 
-    <!-- PRELOAD SECTION (TOGGLEABLE) -->
-    <LinearLayout
-        android:id="@+id/layout_preload"
+    <TextView
+        android:id="@+id/txt_rel_done"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
         android:layout_weight="1"
-        android:background="@drawable/bg_inner_box_monochrome"
-        android:orientation="vertical"
-        android:padding="8dp">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp">
-
-            <TextView
-                android:id="@+id/lbl_pre_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:text="ПРЕДЗАГРУЗКА"
-                android:textColor="@color/text_white"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/lbl_pre_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="09.11 • 21:30"
-                android:textColor="@color/text_muted"
-                android:textSize="10sp" />
-        </RelativeLayout>
-
-        <!-- Preload Digits Grid -->
-        <LinearLayout
-            android:id="@+id/grid_pre_digits"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <!-- Days -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/txt_pre_days"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="01"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/unit_days"
-                    android:textColor="@color/text_muted"
-                    android:textSize="8sp" />
-            </LinearLayout>
-
-            <!-- Hours -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/txt_pre_hours"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="10"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/unit_hours"
-                    android:textColor="@color/text_muted"
-                    android:textSize="8sp" />
-            </LinearLayout>
-
-            <!-- Minutes -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/txt_pre_mins"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="45"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/unit_mins"
-                    android:textColor="@color/text_muted"
-                    android:textSize="8sp" />
-            </LinearLayout>
-
-            <!-- Seconds -->
-            <LinearLayout
-                android:id="@+id/box_pre_secs"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/txt_pre_secs"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="36"
-                    android:textColor="@color/text_white"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/unit_secs"
-                    android:textColor="@color/text_muted"
-                    android:textSize="8sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/txt_pre_done"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/status_preload_active"
-            android:textColor="@color/text_white"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
-    </LinearLayout>
+        android:gravity="center"
+        android:text="@string/status_released"
+        android:textColor="@color/accent_pink"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
 </LinearLayout>

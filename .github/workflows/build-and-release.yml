@@ -139,21 +139,23 @@ jobs:
             Multiplatform release of the GTA VI countdown widget and application:
             
             - 📱 **Android**: `GTA6Countdown-Android.apk`
-              - **1x1 Mini Widget**: Days, GTA VI label, Gamepad icon, live time pill (HH:MM:SS)
-              - **1x2 Monochrome Widget**: Big days counter, GTA VI, gamepad icon, live hours:minutes:seconds
-              - **2x2 Widget**: Full countdown (Release + Preload toggleable)
-              - **Multiple Themes**: Monochrome Matte (matching screenshot), Liquid Glass (65-75% frosted blur), Vice City Neon, OLED Black
+              - **72 Hours Update**: Preload timer removed, main countdown is now in total hours!
+              - **Days on Top**: Days remaining clearly shown above the timer.
+              - **1x1 Mini Widget**: Days badge on top, big hours counter, live seconds pill
+              - **1x2 Widget**: Days banner on top, big hours counter, live hours:minutes:seconds
+              - **2x2 Widget**: Hero total hours countdown with live minutes and seconds
+              - **Multiple Themes**: Monochrome Matte, Liquid Glass (65-75% frosted blur), Vice City Neon, OLED Black
               - **Live Seconds Service**: Real-time ticking when screen is active without battery drain
-              - In-app toggle: Manually hide/disable the preload timer
               - One-tap Pin Widgets directly to home screen
             - 🪟 **Windows**: `GTA6Countdown-Windows.zip`
               - Native WPF desktop widget pinned to wallpaper
+              - Total hours countdown with days on top and live seconds
               - Freeform resize & context menu
-              - Preload countdown toggle in context menu
             - 🍏 **macOS**: `GTA6Countdown-macOS.zip`
               - Native SwiftUI desktop widget with wallpaper blur
-              - Draggable, context menu, preload countdown toggle
-            - 🌐 **Web**: `index.html` (interactive countdown with Vice City aesthetic & confetti)
+              - Total hours countdown with days on top and live seconds
+              - Draggable, resizable, context menu
+            - 🌐 **Web**: `index.html` (hourly countdown with days banner, Vice City aesthetic & confetti)
           files: |
             GTA6Countdown-Android.apk
             GTA6Countdown-Windows.zip
