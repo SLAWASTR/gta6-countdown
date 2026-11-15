@@ -16,54 +16,27 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:text="3 ДНЯ ДО РЕЛИЗА"
+        android:layout_toStartOf="@id/img_1x2_gamepad"
+        android:layout_marginEnd="8dp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:text="2 ДНЯ ДО РЕЛИЗА"
         android:textColor="@color/accent_pink"
-        android:textSize="9.5sp"
+        android:textSize="10sp"
         android:textStyle="bold" />
 
     <!-- Top Right Gamepad Icon -->
     <ImageView
         android:id="@+id/img_1x2_gamepad"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:alpha="0.85"
         android:contentDescription="@string/app_name"
         android:src="@drawable/ic_gamepad" />
 
-    <!-- Left: Big Number (Total Hours) and GTA VI -->
-    <LinearLayout
-        android:id="@+id/layout_1x2_hero"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:gravity="start"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/txt_1x2_hours"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:includeFontPadding="false"
-            android:text="71"
-            android:textColor="@color/text_white"
-            android:textSize="36sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/txt_1x2_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:letterSpacing="0.05"
-            android:text="ЧАСОВ • GTA VI"
-            android:textColor="@color/text_white"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Right: Live Timer Row with SECONDS -->
+    <!-- Right: Live Timer Row with Live Seconds -->
     <LinearLayout
         android:id="@+id/layout_1x2_digits"
         android:layout_width="wrap_content"
@@ -72,49 +45,6 @@
         android:layout_alignParentBottom="true"
         android:gravity="center_vertical"
         android:orientation="horizontal">
-
-        <!-- Hours Box -->
-        <LinearLayout
-            android:id="@+id/box_1x2_hours"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_inner_box_monochrome"
-            android:gravity="center"
-            android:minWidth="34dp"
-            android:orientation="vertical"
-            android:paddingStart="6dp"
-            android:paddingTop="3dp"
-            android:paddingEnd="6dp"
-            android:paddingBottom="3dp">
-
-            <TextView
-                android:id="@+id/txt_1x2_box_hours"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                android:text="71"
-                android:textColor="@color/text_white"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                android:text="@string/unit_hours_short"
-                android:textColor="@color/text_muted"
-                android:textSize="7sp" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="2dp"
-            android:paddingEnd="2dp"
-            android:text=":"
-            android:textColor="@color/text_muted"
-            android:textSize="13sp"
-            android:textStyle="bold" />
 
         <!-- Mins Box -->
         <LinearLayout
@@ -125,10 +55,10 @@
             android:gravity="center"
             android:minWidth="34dp"
             android:orientation="vertical"
-            android:paddingStart="6dp"
-            android:paddingTop="3dp"
-            android:paddingEnd="6dp"
-            android:paddingBottom="3dp">
+            android:paddingStart="7dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="7dp"
+            android:paddingBottom="4dp">
 
             <TextView
                 android:id="@+id/txt_1x2_mins"
@@ -152,8 +82,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="2dp"
-            android:paddingEnd="2dp"
+            android:paddingStart="3dp"
+            android:paddingEnd="3dp"
             android:text=":"
             android:textColor="@color/text_muted"
             android:textSize="13sp"
@@ -168,10 +98,10 @@
             android:gravity="center"
             android:minWidth="34dp"
             android:orientation="vertical"
-            android:paddingStart="6dp"
-            android:paddingTop="3dp"
-            android:paddingEnd="6dp"
-            android:paddingBottom="3dp">
+            android:paddingStart="7dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="7dp"
+            android:paddingBottom="4dp">
 
             <TextView
                 android:id="@+id/txt_1x2_secs"
@@ -191,6 +121,40 @@
                 android:textColor="@color/text_muted"
                 android:textSize="7sp" />
         </LinearLayout>
+    </LinearLayout>
+
+    <!-- Left: Big Number (Total Hours) and GTA VI -->
+    <LinearLayout
+        android:id="@+id/layout_1x2_hero"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@id/layout_1x2_digits"
+        android:layout_marginEnd="10dp"
+        android:gravity="start"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txt_1x2_hours"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="71"
+            android:textColor="@color/text_white"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txt_1x2_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.05"
+            android:singleLine="true"
+            android:text="GTA VI"
+            android:textColor="@color/text_white"
+            android:textSize="11sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <TextView

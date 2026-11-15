@@ -13,7 +13,11 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:text="3 ДН"
+        android:layout_toStartOf="@id/img_1x1_gamepad"
+        android:layout_marginEnd="6dp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:text="2 ДН"
         android:textColor="@color/accent_pink"
         android:textSize="10sp"
         android:textStyle="bold" />
@@ -52,26 +56,40 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:letterSpacing="0.05"
-            android:text="ЧАСОВ • GTA VI"
+            android:singleLine="true"
+            android:text="GTA VI"
             android:textColor="@color/text_white"
             android:textSize="10sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Bottom Seconds Pill (Live) -->
+    <!-- Bottom Right: Live Seconds Pill -->
     <TextView
         android:id="@+id/txt_1x1_time_pill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
         android:background="@drawable/bg_pill_time"
         android:paddingStart="6dp"
         android:paddingTop="2dp"
         android:paddingEnd="6dp"
         android:paddingBottom="2dp"
-        android:text="26:15"
-        android:textColor="@color/text_muted"
-        android:textSize="8sp" />
+        android:text="14:52"
+        android:textColor="@color/text_white"
+        android:textSize="9.5sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/txt_1x1_done"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:text="@string/status_released"
+        android:textColor="@color/accent_pink"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
 </RelativeLayout>

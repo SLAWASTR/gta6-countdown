@@ -191,7 +191,7 @@ public class WidgetHelper {
         views.setInt(R.id.widget_1x1_root, "setBackgroundResource", getWidgetBgDrawable(theme));
         views.setTextViewText(R.id.txt_1x1_days_top, rel.daysBadge());
         views.setTextViewText(R.id.txt_1x1_hours, rel.totalHoursStr());
-        views.setTextViewText(R.id.txt_1x1_title, rel.hoursLabel() + " • GTA VI");
+        views.setTextViewText(R.id.txt_1x1_title, "GTA VI");
         views.setTextViewText(R.id.txt_1x1_time_pill, rel.timeOnly());
 
         Intent intent = new Intent(context, MainActivity.class);
@@ -251,7 +251,6 @@ public class WidgetHelper {
         views.setInt(R.id.widget_1x2_root, "setBackgroundResource", getWidgetBgDrawable(theme));
 
         int innerBox = getInnerBoxDrawable(theme);
-        views.setInt(R.id.box_1x2_hours, "setBackgroundResource", innerBox);
         views.setInt(R.id.box_1x2_mins, "setBackgroundResource", innerBox);
         views.setInt(R.id.box_1x2_secs, "setBackgroundResource", innerBox);
 
@@ -263,8 +262,7 @@ public class WidgetHelper {
             views.setViewVisibility(R.id.txt_1x2_done, View.GONE);
             views.setTextViewText(R.id.txt_1x2_days_top, rel.daysTopLabel());
             views.setTextViewText(R.id.txt_1x2_hours, rel.totalHoursStr());
-            views.setTextViewText(R.id.txt_1x2_title, rel.hoursLabel() + " • GTA VI");
-            views.setTextViewText(R.id.txt_1x2_box_hours, rel.totalHoursStr());
+            views.setTextViewText(R.id.txt_1x2_title, "GTA VI");
             views.setTextViewText(R.id.txt_1x2_mins, rel.minsStr());
             views.setTextViewText(R.id.txt_1x2_secs, rel.secsStr()); // SECONDS ALWAYS SHOWN!
         }
@@ -284,7 +282,7 @@ public class WidgetHelper {
             views.setViewVisibility(R.id.txt_1x2_done, View.GONE);
             views.setTextViewText(R.id.txt_1x2_days_top, rel.daysBadge());
             views.setTextViewText(R.id.txt_1x2_hours, rel.totalHoursStr());
-            views.setTextViewText(R.id.txt_1x2_title, rel.hoursLabel() + " • GTA VI");
+            views.setTextViewText(R.id.txt_1x2_title, "GTA VI");
             views.setTextViewText(R.id.txt_1x2_pill_time, rel.timeOnly()); // LIVE SECONDS!
         }
         views.setOnClickPendingIntent(R.id.widget_1x2_root, pendingIntent);
