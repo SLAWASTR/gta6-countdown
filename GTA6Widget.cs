@@ -70,6 +70,7 @@ public class WidgetWindow : Window {
     private double digitFontSize = 200;
     private bool showColons = true;
     private bool cyanSeconds = true;
+    private bool enableShadow = true;
 
     // Target Date (Release 18.11 21:30 MSK)
     private DateTime releaseDate;
@@ -83,6 +84,7 @@ public class WidgetWindow : Window {
 
     private StackPanel digitsPanel;
     private Border doneBox;
+    private DropShadowEffect digitShadow;
 
     private readonly string configFile = "widget_config.txt";
 
@@ -117,6 +119,7 @@ public class WidgetWindow : Window {
 
         BuildUI();
         BuildContextMenu();
+        ApplyShadowState();
 
         this.Loaded += (s, e) => ApplyLayerMode();
         this.SourceInitialized += OnSourceInitialized;
@@ -173,6 +176,7 @@ public class WidgetWindow : Window {
         layerMode = (layerMode + 1) % 3;
         ApplyLayerMode();
         SaveConfig();
+        BuildContextMenu();
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
@@ -244,6 +248,13 @@ public class WidgetWindow : Window {
         } else if (e.Key == Key.Tab) {
             CycleLayer();
             e.Handled = true;
+        } else if (e.Key == Key.S) {
+            // Включение / выключение тени клавишей S
+            enableShadow = !enableShadow;
+            ApplyShadowState();
+            SaveConfig();
+            BuildContextMenu();
+            e.Handled = true;
         } else if (e.Key == Key.OemPlus || e.Key == Key.Add) {
             ChangeFontSize(digitFontSize + 15);
             e.Handled = true;
@@ -271,8 +282,8 @@ public class WidgetWindow : Window {
             VerticalAlignment = VerticalAlignment.Center
         };
 
-        // Deep shadow so the digits remain 100% readable over any wallpaper/sunset sky
-        var shadow = new DropShadowEffect {
+        // Deep shadow for optional contrast
+        digitShadow = new DropShadowEffect {
             Color = Color.FromArgb(240, 12, 4, 24),
             BlurRadius = 28,
             ShadowDepth = 4,
@@ -280,11 +291,11 @@ public class WidgetWindow : Window {
             Opacity = 0.92
         };
 
-        txtHours = CreateDigitBlock("52", Brushes.White, shadow);
-        txtColon1 = CreateColonBlock(shadow);
-        txtMins = CreateDigitBlock("20", Brushes.White, shadow);
-        txtColon2 = CreateColonBlock(shadow);
-        txtSecs = CreateDigitBlock("10", new SolidColorBrush(Color.FromRgb(0, 242, 254)), shadow);
+        txtHours = CreateDigitBlock("52", Brushes.White);
+        txtColon1 = CreateColonBlock();
+        txtMins = CreateDigitBlock("20", Brushes.White);
+        txtColon2 = CreateColonBlock();
+        txtSecs = CreateDigitBlock("10", new SolidColorBrush(Color.FromRgb(0, 242, 254)));
 
         digitsPanel.Children.Add(txtHours);
         digitsPanel.Children.Add(txtColon1);
@@ -319,7 +330,16 @@ public class WidgetWindow : Window {
         this.Content = root;
     }
 
-    private TextBlock CreateDigitBlock(string text, Brush brush, DropShadowEffect shadow) {
+    private void ApplyShadowState() {
+        var effect = enableShadow ? digitShadow : null;
+        if (txtHours != null) txtHours.Effect = effect;
+        if (txtColon1 != null) txtColon1.Effect = effect;
+        if (txtMins != null) txtMins.Effect = effect;
+        if (txtColon2 != null) txtColon2.Effect = effect;
+        if (txtSecs != null) txtSecs.Effect = effect;
+    }
+
+    private TextBlock CreateDigitBlock(string text, Brush brush) {
         return new TextBlock {
             Text = text,
             FontFamily = new FontFamily("Segoe UI"),
@@ -328,12 +348,11 @@ public class WidgetWindow : Window {
             Foreground = brush,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            LineHeight = digitFontSize * 0.95,
-            Effect = shadow
+            LineHeight = digitFontSize * 0.95
         };
     }
 
-    private TextBlock CreateColonBlock(DropShadowEffect shadow) {
+    private TextBlock CreateColonBlock() {
         return new TextBlock {
             Text = ":",
             FontFamily = new FontFamily("Segoe UI"),
@@ -342,8 +361,7 @@ public class WidgetWindow : Window {
             Foreground = new SolidColorBrush(Color.FromArgb(160, 255, 255, 255)),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(digitFontSize * 0.08, 0, digitFontSize * 0.08, digitFontSize * 0.12),
-            Effect = shadow
+            Margin = new Thickness(digitFontSize * 0.08, 0, digitFontSize * 0.08, digitFontSize * 0.12)
         };
     }
 
@@ -439,6 +457,20 @@ public class WidgetWindow : Window {
         menu.Items.Add(axisInfo);
 
         menu.Items.Add(new Separator());
+
+        // Shadow toggle (Опциональная тень)
+        var shadowItem = new MenuItem {
+            Header = "Мягкая тень цифр (Клавиша S)",
+            IsCheckable = true,
+            IsChecked = enableShadow
+        };
+        shadowItem.Click += (s, e) => {
+            enableShadow = !enableShadow;
+            ApplyShadowState();
+            SaveConfig();
+            BuildContextMenu();
+        };
+        menu.Items.Add(shadowItem);
 
         // Font Sizes Submenu
         var sizeMenu = new MenuItem { Header = "📏 Размер цифр..." };
@@ -539,7 +571,7 @@ public class WidgetWindow : Window {
 
     private void SaveConfig() {
         try {
-            string line = string.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8}",
+            string line = string.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8};{9}",
                 (int)this.Left,
                 (int)this.Top,
                 (int)this.Width,
@@ -548,7 +580,8 @@ public class WidgetWindow : Window {
                 isLocked ? 1 : 0,
                 (int)digitFontSize,
                 showColons ? 1 : 0,
-                cyanSeconds ? 1 : 0);
+                cyanSeconds ? 1 : 0,
+                enableShadow ? 1 : 0);
             File.WriteAllText(configFile, line);
         } catch { }
     }
@@ -573,6 +606,7 @@ public class WidgetWindow : Window {
                     if (parts.Length >= 7) digitFontSize = double.Parse(parts[6]);
                     if (parts.Length >= 8) showColons = parts[7] == "1";
                     if (parts.Length >= 9) cyanSeconds = parts[8] == "1";
+                    if (parts.Length >= 10) enableShadow = parts[9] == "1";
                 }
             }
         } catch { }
