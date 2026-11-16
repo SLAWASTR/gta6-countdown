@@ -9,6 +9,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
+using Microsoft.Win32;
 
 public class GTA6WidgetApp : Application {
     [STAThread]
@@ -86,7 +87,7 @@ public class WidgetWindow : Window {
     private Border doneBox;
     private DropShadowEffect digitShadow;
 
-    private readonly string configFile = "widget_config.txt";
+    private readonly string configFile;
 
     public WidgetWindow() {
         this.Title = "GTA VI Countdown Digits";
@@ -95,6 +96,10 @@ public class WidgetWindow : Window {
         this.Background = Brushes.Transparent;
         this.ShowInTaskbar = false;
         this.ResizeMode = ResizeMode.NoResize;
+
+        // Ensure config is always saved/loaded next to the executable, even during Windows autostart
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        configFile = System.IO.Path.Combine(baseDir, "widget_config.txt");
 
         // Target Date
         int currentYear = DateTime.Now.Year;
@@ -223,22 +228,18 @@ public class WidgetWindow : Window {
         else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control) step = 1.0;
 
         if (e.Key == Key.Left) {
-            // Движение по оси X влево
             this.Left -= step;
             SaveConfig();
             e.Handled = true;
         } else if (e.Key == Key.Right) {
-            // Движение по оси X вправо
             this.Left += step;
             SaveConfig();
             e.Handled = true;
         } else if (e.Key == Key.Up) {
-            // Движение по оси Y вверх
             this.Top -= step;
             SaveConfig();
             e.Handled = true;
         } else if (e.Key == Key.Down) {
-            // Движение по оси Y вниз
             this.Top += step;
             SaveConfig();
             e.Handled = true;
@@ -249,7 +250,6 @@ public class WidgetWindow : Window {
             CycleLayer();
             e.Handled = true;
         } else if (e.Key == Key.S) {
-            // Включение / выключение тени клавишей S
             enableShadow = !enableShadow;
             ApplyShadowState();
             SaveConfig();
@@ -271,7 +271,7 @@ public class WidgetWindow : Window {
 
     private void BuildUI() {
         var root = new Grid {
-            Background = Brushes.Transparent, // ЧИСТЫЙ ПРОЗРАЧНЫЙ ФОН, НИКАКИХ КАРТОЧЕК И РАМОК
+            Background = Brushes.Transparent,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
@@ -282,7 +282,6 @@ public class WidgetWindow : Window {
             VerticalAlignment = VerticalAlignment.Center
         };
 
-        // Deep shadow for optional contrast
         digitShadow = new DropShadowEffect {
             Color = Color.FromArgb(240, 12, 4, 24),
             BlurRadius = 28,
@@ -305,7 +304,6 @@ public class WidgetWindow : Window {
 
         root.Children.Add(digitsPanel);
 
-        // Done box on release
         doneBox = new Border {
             Background = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)),
             BorderBrush = new SolidColorBrush(Color.FromRgb(0, 255, 140)),
@@ -406,11 +404,37 @@ public class WidgetWindow : Window {
         this.Width = digitFontSize * 4.4;
         this.Height = digitFontSize * 1.35;
 
-        // Keep center in same spot
         this.Left -= (this.Width - oldW) / 2.0;
         this.Top -= (this.Height - oldH) / 2.0;
 
         SaveConfig();
+    }
+
+    private bool IsAutostartEnabled() {
+        try {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", false)) {
+                if (key != null) {
+                    object val = key.GetValue("GTA6CountdownWidget");
+                    return val != null;
+                }
+            }
+        } catch { }
+        return false;
+    }
+
+    public void SetAutostart(bool enable) {
+        try {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true)) {
+                if (key != null) {
+                    if (enable) {
+                        string exePath = Assembly.GetExecutingAssembly().Location;
+                        key.SetValue("GTA6CountdownWidget", "\"" + exePath + "\"");
+                    } else {
+                        key.DeleteValue("GTA6CountdownWidget", false);
+                    }
+                }
+            }
+        } catch { }
     }
 
     private void BuildContextMenu() {
@@ -452,13 +476,7 @@ public class WidgetWindow : Window {
 
         menu.Items.Add(layerMenu);
 
-        // Axis nudge hints
-        var axisInfo = new MenuItem { Header = "📐 Стрелки ← ↑ → ↓ — движение по осям X и Y", IsEnabled = false };
-        menu.Items.Add(axisInfo);
-
-        menu.Items.Add(new Separator());
-
-        // Shadow toggle (Опциональная тень)
+        // Shadow toggle
         var shadowItem = new MenuItem {
             Header = "Мягкая тень цифр (Клавиша S)",
             IsCheckable = true,
@@ -517,6 +535,18 @@ public class WidgetWindow : Window {
             UpdateCountdown();
         };
         menu.Items.Add(cyanItem);
+
+        var autoItem = new MenuItem {
+            Header = "🚀 Автозапуск при старте Windows",
+            IsCheckable = true,
+            IsChecked = IsAutostartEnabled()
+        };
+        autoItem.Click += (s, e) => {
+            bool curr = IsAutostartEnabled();
+            SetAutostart(!curr);
+            autoItem.IsChecked = !curr;
+        };
+        menu.Items.Add(autoItem);
 
         var lockItem = new MenuItem {
             Header = "Закрепить положение",
