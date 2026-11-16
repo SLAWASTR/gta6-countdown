@@ -15,11 +15,11 @@
   <style>
     :root {
       --bg: #090611;
-      --card-bg: rgba(20, 14, 34, 0.75);
+      --card-bg: rgba(20, 14, 34, 0.78);
       --pink: #ff2a8d;
-      --pink-glow: rgba(255, 42, 141, 0.4);
+      --pink-glow: rgba(255, 42, 141, 0.45);
       --cyan: #00f2fe;
-      --cyan-glow: rgba(0, 242, 254, 0.4);
+      --cyan-glow: rgba(0, 242, 254, 0.45);
       --text: #ffffff;
       --text-dim: #9b94b0;
     }
@@ -37,42 +37,81 @@
       font-family: 'Montserrat', sans-serif;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 24px;
       overflow-x: hidden;
       position: relative;
+      transition: all 0.3s ease;
     }
 
     /* Ambient background glows */
     .glow {
       position: fixed;
-      width: 500px;
-      height: 500px;
+      width: 600px;
+      height: 600px;
       border-radius: 50%;
-      filter: blur(140px);
+      filter: blur(150px);
       pointer-events: none;
       z-index: 0;
-      opacity: 0.28;
+      opacity: 0.32;
       animation: pulseGlow 10s ease-in-out infinite alternate;
     }
-    .glow-pink { top: -80px; left: 15%; background: var(--pink); }
-    .glow-cyan { bottom: -80px; right: 15%; background: var(--cyan); animation-delay: -5s; }
+    .glow-pink { top: -100px; left: 10%; background: var(--pink); }
+    .glow-cyan { bottom: -100px; right: 10%; background: var(--cyan); animation-delay: -5s; }
 
     @keyframes pulseGlow {
       0% { opacity: 0.22; transform: scale(0.95); }
-      100% { opacity: 0.35; transform: scale(1.08); }
+      100% { opacity: 0.38; transform: scale(1.1); }
+    }
+
+    /* Top Action Bar */
+    .top-bar {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-fs {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-fs:hover {
+      background: rgba(255, 42, 141, 0.25);
+      border-color: var(--pink);
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px var(--pink-glow);
     }
 
     .wrapper {
       position: relative;
       z-index: 1;
       width: 100%;
-      max-width: 780px;
+      max-width: 820px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 22px;
+      transition: all 0.3s ease;
     }
 
     /* Logo Header */
@@ -83,12 +122,13 @@
     }
 
     .logo-img {
-      width: 220px;
+      width: 240px;
       max-width: 65vw;
       height: auto;
       display: block;
-      filter: drop-shadow(0 6px 24px rgba(255, 42, 141, 0.45));
+      filter: drop-shadow(0 6px 30px rgba(255, 42, 141, 0.5));
       pointer-events: none;
+      transition: width 0.3s ease;
     }
 
     /* Grid for Card */
@@ -96,28 +136,24 @@
       display: grid;
       grid-template-columns: 1fr;
       width: 100%;
-      max-width: 620px;
+      max-width: 660px;
+      transition: max-width 0.3s ease;
     }
 
     .card {
       background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      padding: 26px 24px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 28px 24px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
-      transition: transform 0.25s ease, border-color 0.25s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.55);
+      transition: all 0.25s ease;
     }
 
     .card::before {
@@ -137,20 +173,21 @@
     }
 
     .days-banner {
-      background: rgba(255, 42, 141, 0.12);
-      border: 1px solid rgba(255, 42, 141, 0.3);
+      background: rgba(255, 42, 141, 0.15);
+      border: 1.5px solid rgba(255, 42, 141, 0.4);
       color: #ff85be;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 8px 14px;
-      border-radius: 10px;
+      padding: 10px 16px;
+      border-radius: 12px;
       text-align: center;
+      box-shadow: 0 0 18px rgba(255, 42, 141, 0.2);
     }
 
     .title {
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       font-weight: 800;
       letter-spacing: 0.5px;
       display: flex;
@@ -159,12 +196,12 @@
     }
 
     .badge {
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 20px;
-      background: rgba(255, 42, 141, 0.15);
-      border: 1px solid rgba(255, 42, 141, 0.35);
+      background: rgba(255, 42, 141, 0.18);
+      border: 1px solid rgba(255, 42, 141, 0.4);
       color: #ff9ec7;
     }
 
@@ -172,50 +209,78 @@
     .digits {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 14px;
     }
 
     .col {
-      background: rgba(10, 6, 18, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      padding: 16px 8px;
+      background: rgba(12, 7, 22, 0.7);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 20px 10px;
       text-align: center;
-      transition: transform 0.2s ease;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .col-hours {
+      border-color: rgba(255, 42, 141, 0.45);
+      box-shadow: 0 0 25px rgba(255, 42, 141, 0.15);
+    }
+
+    .col-secs {
+      border-color: rgba(0, 242, 254, 0.45);
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.15);
     }
 
     .col:hover {
-      transform: translateY(-2px);
+      transform: translateY(-3px);
     }
 
     .num {
       font-family: 'Rajdhani', sans-serif;
-      font-size: clamp(2.4rem, 5.5vw, 3.6rem);
+      font-size: clamp(2.8rem, 6vw, 4.2rem);
       font-weight: 700;
       line-height: 1;
       display: block;
       color: #fff;
-      text-shadow: 0 0 16px var(--pink-glow);
+    }
+
+    .num-hours {
+      color: #ffffff;
+      text-shadow: 0 0 24px var(--pink-glow);
+    }
+
+    .num-secs {
+      color: #00f2fe;
+      text-shadow: 0 0 24px var(--cyan-glow);
     }
 
     .lbl {
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.82rem;
+      font-weight: 800;
       color: var(--text-dim);
       text-transform: uppercase;
-      margin-top: 6px;
+      margin-top: 8px;
       display: block;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+    }
+
+    .lbl-hours {
+      color: #ff59a7;
+    }
+
+    .lbl-secs {
+      color: #00f2fe;
     }
 
     .done-msg {
       display: none;
       text-align: center;
       font-weight: 900;
-      font-size: 1.15rem;
-      padding: 18px 0;
+      font-size: 1.25rem;
+      padding: 20px 0;
       color: #00ff88;
-      text-shadow: 0 0 14px rgba(0, 255, 136, 0.5);
+      text-shadow: 0 0 16px rgba(0, 255, 136, 0.6);
     }
 
     /* Actions */
@@ -223,23 +288,23 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 10px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .exact-info {
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       color: var(--text-dim);
     }
 
     .btn-cal {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fff;
-      padding: 6px 12px;
-      border-radius: 8px;
+      padding: 7px 14px;
+      border-radius: 9px;
       font-family: inherit;
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -250,7 +315,7 @@
     }
 
     .btn-cal:hover {
-      background: rgba(255, 42, 141, 0.2);
+      background: rgba(255, 42, 141, 0.25);
       border-color: var(--pink);
       transform: translateY(-1px);
     }
@@ -263,8 +328,110 @@
 
     .footer {
       text-align: center;
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.35);
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* =========================================================================
+       FULLSCREEN 2560x1440 EXPERIENCE ("ПО КРАСОТЕ")
+       ========================================================================= */
+    body.fullscreen-mode {
+      padding: 40px;
+      justify-content: center;
+    }
+
+    body.fullscreen-mode .wrapper {
+      max-width: 1400px;
+      gap: 36px;
+    }
+
+    body.fullscreen-mode .logo-img {
+      width: 340px;
+      filter: drop-shadow(0 10px 45px rgba(255, 42, 141, 0.65));
+    }
+
+    body.fullscreen-mode .grid {
+      max-width: 1300px;
+    }
+
+    body.fullscreen-mode .card {
+      padding: 40px 36px;
+      border-radius: 32px;
+      gap: 28px;
+    }
+
+    body.fullscreen-mode .days-banner {
+      font-size: 1.4rem;
+      padding: 14px 28px;
+      border-radius: 18px;
+    }
+
+    body.fullscreen-mode .digits {
+      gap: 24px;
+    }
+
+    body.fullscreen-mode .col {
+      padding: 40px 16px;
+      border-radius: 26px;
+    }
+
+    body.fullscreen-mode .num {
+      font-size: clamp(4.5rem, 9vw, 7.5rem);
+    }
+
+    body.fullscreen-mode .lbl {
+      font-size: 1.3rem;
+      letter-spacing: 2.5px;
+      margin-top: 14px;
+    }
+
+    body.fullscreen-mode .card-footer {
+      padding-top: 20px;
+    }
+
+    body.fullscreen-mode .exact-info {
+      font-size: 1.15rem;
+    }
+
+    body.fullscreen-mode .footer {
+      font-size: 1.05rem;
+    }
+
+    /* Native 2560x1440 Ultra-wide / 2K media query */
+    @media (min-width: 2000px) and (min-height: 1200px) {
+      .wrapper {
+        max-width: 1450px;
+        gap: 36px;
+      }
+      .logo-img {
+        width: 360px;
+      }
+      .grid {
+        max-width: 1350px;
+      }
+      .card {
+        padding: 44px 40px;
+        border-radius: 34px;
+        gap: 30px;
+      }
+      .days-banner {
+        font-size: 1.45rem;
+        padding: 16px 30px;
+      }
+      .col {
+        padding: 46px 20px;
+        border-radius: 28px;
+      }
+      .num {
+        font-size: 8rem;
+      }
+      .lbl {
+        font-size: 1.4rem;
+        letter-spacing: 3px;
+      }
+      .exact-info {
+        font-size: 1.25rem;
+      }
     }
   </style>
 </head>
@@ -272,6 +439,13 @@
 
   <div class="glow glow-pink"></div>
   <div class="glow glow-cyan"></div>
+
+  <!-- Top Right Fullscreen Button -->
+  <div class="top-bar">
+    <button class="btn-fs" id="btn-fullscreen" onclick="toggleFullscreen()">
+      <span id="fs-icon">⛶</span> <span id="fs-text">На весь экран (2560×1440)</span>
+    </button>
+  </div>
 
   <div class="wrapper">
     
@@ -290,17 +464,17 @@
         </div>
 
         <div class="days-banner" id="r-days-banner">
-          ⚡ ОСТАЛОСЬ: 3 ДНЯ ДО РЕЛИЗА
+          ⚡ ОСТАЛОСЬ: 2 ДНЯ ДО РЕЛИЗА
         </div>
 
         <div class="digits" id="r-timer">
-          <div class="col"><span class="num" id="r-h">71</span><span class="lbl" id="r-h-lbl">часов</span></div>
+          <div class="col col-hours"><span class="num num-hours" id="r-h">52</span><span class="lbl lbl-hours" id="r-h-lbl">часа</span></div>
           <div class="col"><span class="num" id="r-m">00</span><span class="lbl" id="r-m-lbl">минут</span></div>
-          <div class="col"><span class="num" id="r-s">00</span><span class="lbl" id="r-s-lbl">секунд</span></div>
+          <div class="col col-secs"><span class="num num-secs" id="r-s">00</span><span class="lbl lbl-secs" id="r-s-lbl">секунд</span></div>
         </div>
         <div class="done-msg" id="r-done">ДОЖДАЛИСЬ! ИГРА ВЫШЛА 🎉</div>
         <div class="card-footer">
-          <span class="exact-info">18 ноября 2026 • 21:30 (МСК)</span>
+          <span class="exact-info">18 ноября 2026 • 21:30 (МСК) • Vice City</span>
           <button class="btn-cal" onclick="addToCalendar('release')">
             <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"/></svg>
             В календарь
@@ -311,7 +485,7 @@
     </div>
 
     <footer class="footer">
-      Grand Theft Auto VI Countdown • Rockstar Games
+      Grand Theft Auto VI Countdown • Rockstar Games • PlayStation 5 &amp; Xbox Series X|S
     </footer>
 
   </div>
@@ -363,7 +537,7 @@
       if (days === 0) {
         banner.innerText = '⚡ ФИНАЛЬНЫЙ ДЕНЬ • МЕНЕЕ 24 ЧАСОВ!';
       } else {
-        banner.innerText = '⚡ ОСТАЛОСЬ: ' + days + ' ' + declOfNum(days, wDays).toUpperCase() + ' ДО РЕЛИЗА';
+        banner.innerText = '⚡ ОСТАЛОСЬ: ' + days + ' ' + declOfNum(days, wDays).toUpperCase() + ' (' + totalHours + ' ' + declOfNum(totalHours, wHours).toUpperCase() + ') ДО РЕЛИЗА';
       }
 
       // Hourly Countdown
@@ -378,6 +552,39 @@
 
     tick();
     setInterval(tick, 1000);
+
+    // Fullscreen toggle logic
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(err => {});
+        }
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      const isFs = !!document.fullscreenElement;
+      document.body.classList.toggle('fullscreen-mode', isFs);
+      const icon = document.getElementById('fs-icon');
+      const text = document.getElementById('fs-text');
+      if (isFs) {
+        icon.innerText = '🗗';
+        text.innerText = 'Выйти из полноэкранного режима';
+      } else {
+        icon.innerText = '⛶';
+        text.innerText = 'На весь экран (2560×1440)';
+      }
+    });
+
+    // Hotkey F11 toggle support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
 
     // .ics Export
     function addToCalendar() {
