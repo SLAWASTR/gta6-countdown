@@ -13,6 +13,12 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
+public enum DisplayMode {
+    TransparentDigits = 0, // Просто огромные цифры без фона по центру экрана
+    CompactCard = 1,       // Компактный виджет с карточкой в углу
+    FullscreenCinema = 2   // Полноэкранный кинотеатр
+}
+
 public class GTA6WidgetApp : Application {
     [STAThread]
     public static void Main(string[] args) {
@@ -20,19 +26,12 @@ public class GTA6WidgetApp : Application {
             try { File.WriteAllText("crash.log", e.ExceptionObject.ToString()); } catch { }
         };
         try {
-            bool startFullscreen = false;
-            if (args != null) {
-                for (int i = 0; i < args.Length; i++) {
-                    if (args[i].ToLower().Contains("full") || args[i] == "-f") {
-                        startFullscreen = true;
-                    }
-                }
-            }
             var app = new GTA6WidgetApp();
             app.DispatcherUnhandledException += (s, e) => {
                 try { File.WriteAllText("crash.log", e.Exception.ToString()); } catch { }
+                e.Handled = false;
             };
-            app.Run(new WidgetWindow(startFullscreen));
+            app.Run(new WidgetWindow());
         } catch (Exception ex) {
             try { File.WriteAllText("crash.log", ex.ToString()); } catch { }
         }
@@ -47,7 +46,6 @@ public static class Win32 {
     public static readonly IntPtr HWND_TOP = new IntPtr(0);
     public static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
     public static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
-    public static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
 
     public const uint SWP_NOMOVE = 0x0002;
     public const uint SWP_NOSIZE = 0x0001;
@@ -78,23 +76,44 @@ public class WidgetWindow : Window {
     private DispatcherTimer timer;
     private bool isLocked = false;
     private bool isTopmost = false;
-    private bool isFullscreen = false;
+    private DisplayMode currentMode = DisplayMode.TransparentDigits;
 
-    // Previous dimensions for restore
-    private double prevLeft = 2148;
-    private double prevTop = 15;
-    private double prevWidth = 400;
-    private double prevHeight = 185;
+    // Dimensions backup for modes
+    private double digitsLeft = 0;
+    private double digitsTop = 0;
+    private double digitsWidth = 1180;
+    private double digitsHeight = 380;
+    private double digitFontSize = 190;
+
+    private double cardLeft = 2148;
+    private double cardTop = 15;
+    private double cardWidth = 400;
+    private double cardHeight = 185;
 
     // Target Date (Release 18.11 21:30)
     private DateTime releaseDate;
 
     // Root UI
     private Grid rootGrid;
-    private Border widgetCard;
-    private Border fullscreenCard;
+    private Grid transparentDigitsView;
+    private Border compactCardView;
+    private Border fullscreenCinemaView;
 
-    // Compact Widget Controls
+    // 1. Transparent Digits Controls ("ПРОСТО ЦИФРЫ БЕЗ ФОНА")
+    private TextBlock tdDaysTop;
+    private TextBlock tdHoursNum;
+    private TextBlock tdHoursLbl;
+    private TextBlock tdColon1;
+    private TextBlock tdMinsNum;
+    private TextBlock tdMinsLbl;
+    private TextBlock tdColon2;
+    private TextBlock tdSecsNum;
+    private TextBlock tdSecsLbl;
+    private TextBlock tdSubtitle;
+    private Border tdDoneBox;
+    private StackPanel tdDigitsRow;
+
+    // 2. Compact Card Controls
     private TextBlock txtTopDays;
     private TextBlock txtDaysBig;
     private TextBlock txtDaysLbl;
@@ -102,25 +121,18 @@ public class WidgetWindow : Window {
     private TextBlock rH, rM, rS;
     private Border rDoneBox;
     private UniformGrid rGrid;
-    private Border cardRelease;
 
-    // Fullscreen 2560x1440 Controls
+    // 3. Fullscreen Cinema Controls
     private TextBlock fsDaysBadge;
-    private TextBlock fsNumHours;
-    private TextBlock fsLblHours;
-    private TextBlock fsNumMins;
-    private TextBlock fsLblMins;
-    private TextBlock fsNumSecs;
-    private TextBlock fsLblSecs;
-    private TextBlock fsRelDate;
+    private TextBlock fsNumHours, fsLblHours;
+    private TextBlock fsNumMins, fsLblMins;
+    private TextBlock fsNumSecs, fsLblSecs;
     private StackPanel fsDigitsRow;
     private Border fsDoneBox;
 
     private readonly string configFile = "widget_config.txt";
 
-    public WidgetWindow() : this(false) { }
-
-    public WidgetWindow(bool forceFullscreen) {
+    public WidgetWindow() {
         this.Title = "GTA VI Countdown";
         this.WindowStyle = WindowStyle.None;
         this.AllowsTransparency = true;
@@ -128,40 +140,49 @@ public class WidgetWindow : Window {
         this.ShowInTaskbar = false;
         this.ResizeMode = ResizeMode.NoResize;
 
-        // Calculate Target Date
+        // Target Date (18 November 2026, 21:30 MSK)
         int currentYear = DateTime.Now.Year;
         releaseDate = new DateTime(currentYear, 11, 18, 21, 30, 0);
         if (DateTime.Now - releaseDate > TimeSpan.FromDays(30)) {
             releaseDate = new DateTime(currentYear + 1, 11, 18, 21, 30, 0);
         }
 
-        this.Width = 400;
-        this.Height = 185;
-        this.MinWidth = 260;
-        this.MinHeight = 115;
-        this.MaxWidth = double.PositiveInfinity;
-        this.MaxHeight = double.PositiveInfinity;
+        double sw = SystemParameters.PrimaryScreenWidth;
+        double sh = SystemParameters.PrimaryScreenHeight;
+        if (sw <= 0) sw = 2560;
+        if (sh <= 0) sh = 1440;
 
-        // Default position
-        double screenW = SystemParameters.WorkArea.Width;
-        this.Left = Math.Max(0, screenW - this.Width - 40);
-        this.Top = 40;
+        // Default: Centered on screen (specifically 2560x1440)
+        digitsWidth = 1180;
+        digitsHeight = 380;
+        digitsLeft = (sw - digitsWidth) / 2.0;
+        digitsTop = (sh - digitsHeight) / 2.0 - 50.0; // slightly above dead center in the sky
+
+        cardWidth = 400;
+        cardHeight = 185;
+        cardLeft = Math.Max(0, sw - cardWidth - 40);
+        cardTop = 40;
 
         LoadConfig();
-        if (forceFullscreen) {
-            isFullscreen = true;
-        }
 
         BuildUI();
         BuildContextMenu();
 
+        ApplyMode(currentMode, false);
+
         this.Loaded += OnLoaded;
         this.SourceInitialized += OnSourceInitialized;
         this.MouseLeftButtonDown += OnMouseLeftButtonDown;
-        this.MouseDoubleClick += (s, e) => ToggleFullscreen();
+        this.MouseDoubleClick += (s, e) => {
+            if (currentMode == DisplayMode.TransparentDigits) {
+                CenterOnScreen();
+            } else {
+                SwitchMode(DisplayMode.TransparentDigits);
+            }
+        };
         this.KeyDown += OnKeyDown;
-        this.LocationChanged += (s, e) => { if (!isFullscreen) SaveConfig(); };
-        this.SizeChanged += (s, e) => { if (!isFullscreen) SaveConfig(); };
+        this.LocationChanged += (s, e) => SaveConfig();
+        this.SizeChanged += (s, e) => SaveConfig();
 
         // Timer
         timer = new DispatcherTimer();
@@ -174,11 +195,15 @@ public class WidgetWindow : Window {
 
     private void OnKeyDown(object sender, KeyEventArgs e) {
         if (e.Key == Key.F11) {
-            ToggleFullscreen();
+            if (currentMode == DisplayMode.FullscreenCinema) {
+                SwitchMode(DisplayMode.TransparentDigits);
+            } else {
+                SwitchMode(DisplayMode.FullscreenCinema);
+            }
             e.Handled = true;
         } else if (e.Key == Key.Escape) {
-            if (isFullscreen) {
-                SetFullscreen(false);
+            if (currentMode != DisplayMode.TransparentDigits) {
+                SwitchMode(DisplayMode.TransparentDigits);
                 e.Handled = true;
             }
         }
@@ -196,30 +221,28 @@ public class WidgetWindow : Window {
         int exStyle = Win32.GetWindowLong(hwnd, Win32.GWL_EXSTYLE);
         Win32.SetWindowLong(hwnd, Win32.GWL_EXSTYLE, exStyle | Win32.WS_EX_TOOLWINDOW | Win32.WS_EX_NOACTIVATE);
 
-        if (isFullscreen) {
-            Win32.SetWindowPos(hwnd, isTopmost ? Win32.HWND_TOPMOST : Win32.HWND_TOP, 0, 0, (int)this.Width, (int)this.Height, Win32.SWP_SHOWWINDOW);
-        } else {
-            if (!isTopmost) {
-                Win32.SetWindowPos(hwnd, Win32.HWND_BOTTOM, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
-            } else {
-                Win32.SetWindowPos(hwnd, Win32.HWND_TOPMOST, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
-            }
-        }
+        ApplyWindowPosition();
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e) {
+        ApplyWindowPosition();
+    }
+
+    private void ApplyWindowPosition() {
         var helper = new WindowInteropHelper(this);
-        if (isFullscreen) {
-            bool wantFs = isFullscreen;
-            isFullscreen = false;
-            SetFullscreen(wantFs);
-        } else if (!isTopmost) {
+        if (helper.Handle == IntPtr.Zero) return;
+
+        if (isTopmost) {
+            Win32.SetWindowPos(helper.Handle, Win32.HWND_TOPMOST, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
+        } else if (currentMode == DisplayMode.FullscreenCinema) {
+            Win32.SetWindowPos(helper.Handle, Win32.HWND_TOP, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_SHOWWINDOW);
+        } else {
             Win32.SetWindowPos(helper.Handle, Win32.HWND_BOTTOM, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
         }
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-        if (!isFullscreen && msg == Win32.WM_NCHITTEST) {
+        if (currentMode != DisplayMode.FullscreenCinema && msg == Win32.WM_NCHITTEST) {
             int x = (short)(lParam.ToInt32() & 0xFFFF);
             int y = (short)((lParam.ToInt32() >> 16) & 0xFFFF);
 
@@ -251,7 +274,7 @@ public class WidgetWindow : Window {
     }
 
     private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        if (!isFullscreen && !isLocked && e.ButtonState == MouseButtonState.Pressed) {
+        if (currentMode != DisplayMode.FullscreenCinema && !isLocked && e.ButtonState == MouseButtonState.Pressed) {
             this.DragMove();
         }
     }
@@ -282,19 +305,193 @@ public class WidgetWindow : Window {
     }
 
     private void BuildUI() {
-        rootGrid = new Grid();
+        rootGrid = new Grid {
+            Background = Brushes.Transparent
+        };
 
-        // 1. Build Compact Widget
-        widgetCard = BuildCompactWidgetUI();
-        rootGrid.Children.Add(widgetCard);
+        // 1. Transparent Digits View ("ПРОСТО ЦИФРЫ БЕЗ ФОНА")
+        transparentDigitsView = BuildTransparentDigitsUI();
+        rootGrid.Children.Add(transparentDigitsView);
 
-        // 2. Build Fullscreen 2560x1440 UI
-        fullscreenCard = BuildFullscreenUI();
-        rootGrid.Children.Add(fullscreenCard);
+        // 2. Compact Card View
+        compactCardView = BuildCompactWidgetUI();
+        rootGrid.Children.Add(compactCardView);
+
+        // 3. Fullscreen Cinema View
+        fullscreenCinemaView = BuildFullscreenUI();
+        rootGrid.Children.Add(fullscreenCinemaView);
 
         this.Content = rootGrid;
     }
 
+    // =========================================================================
+    // 1. MODE: "ПРОСТО ОГРОМНЫЕ ЦИФРЫ БЕЗ ФОНА НА ЦЕНТРЕ ЭКРАНА"
+    // =========================================================================
+    private Grid BuildTransparentDigitsUI() {
+        var grid = new Grid {
+            Background = Brushes.Transparent, // 100% ПРОЗРАЧНО, ВИДНЫ ТОЛЬКО САМИ ЦИФРЫ
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Top Days
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Giant Digits
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Subtitle
+
+        // Deep plum shadow to guarantee 100% crisp contrast against sunset pastel sky
+        var dropShadow = new DropShadowEffect {
+            Color = Color.FromArgb(235, 15, 6, 28),
+            BlurRadius = 26,
+            ShadowDepth = 3,
+            Direction = 315,
+            Opacity = 0.90
+        };
+
+        // ROW 0: Top Days Banner (Floating)
+        tdDaysTop = new TextBlock {
+            Text = "⚡ ОСТАЛОСЬ 2 ДНЯ (52 ЧАСА) ДО РЕЛИЗА ⚡",
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = 24,
+            FontWeight = FontWeights.ExtraBold,
+            Foreground = new SolidColorBrush(Color.FromRgb(255, 65, 145)),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 8),
+            Effect = dropShadow
+        };
+        Grid.SetRow(tdDaysTop, 0);
+        grid.Children.Add(tdDaysTop);
+
+        // ROW 1: THE GIANT DIGITS (Hours : Mins : Secs)
+        var centerDigitsWrapper = new Grid {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        tdDigitsRow = new StackPanel {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        // 1. HOURS
+        tdDigitsRow.Children.Add(CreateHugeDigitCol(out tdHoursNum, out tdHoursLbl, "52", "ЧАСА", Brushes.White, Color.FromRgb(255, 65, 145)));
+
+        // Colon 1
+        tdColon1 = CreateHugeColon(dropShadow);
+        tdDigitsRow.Children.Add(tdColon1);
+
+        // 2. MINUTES
+        tdDigitsRow.Children.Add(CreateHugeDigitCol(out tdMinsNum, out tdMinsLbl, "20", "МИНУТ", Brushes.White, Color.FromArgb(225, 230, 225, 255)));
+
+        // Colon 2
+        tdColon2 = CreateHugeColon(dropShadow);
+        tdDigitsRow.Children.Add(tdColon2);
+
+        // 3. SECONDS (ELECTRIC CYAN)
+        tdDigitsRow.Children.Add(CreateHugeDigitCol(out tdSecsNum, out tdSecsLbl, "10", "СЕКУНД", new SolidColorBrush(Color.FromRgb(0, 242, 254)), Color.FromRgb(0, 242, 254)));
+
+        centerDigitsWrapper.Children.Add(tdDigitsRow);
+
+        // Done Box for Release
+        tdDoneBox = new Border {
+            Background = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(0, 255, 140)),
+            BorderThickness = new Thickness(2),
+            CornerRadius = new CornerRadius(20),
+            Padding = new Thickness(40, 20, 40, 20),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Visibility = Visibility.Collapsed
+        };
+        var txtDone = new TextBlock {
+            Text = "🎉 ИГРА ВЫШЛА! РЕЛИЗ GTA VI СОСТОЯЛСЯ! 🎉",
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = 46,
+            FontWeight = FontWeights.Heavy,
+            Foreground = new SolidColorBrush(Color.FromRgb(0, 255, 140)),
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        tdDoneBox.Child = txtDone;
+        centerDigitsWrapper.Children.Add(tdDoneBox);
+
+        Grid.SetRow(centerDigitsWrapper, 1);
+        grid.Children.Add(centerDigitsWrapper);
+
+        // ROW 2: Subtitle
+        tdSubtitle = new TextBlock {
+            Text = "GRAND THEFT AUTO VI • 18 НОЯБРЯ 2026 • 21:30 МСК",
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = 14,
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255)),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 10, 0, 0),
+            Effect = dropShadow
+        };
+        Grid.SetRow(tdSubtitle, 2);
+        grid.Children.Add(tdSubtitle);
+
+        return grid;
+    }
+
+    private StackPanel CreateHugeDigitCol(out TextBlock valBlock, out TextBlock lblBlock, string initVal, string initLbl, Brush numBrush, Color lblColor) {
+        var stack = new StackPanel {
+            Width = 330,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        var shadow = new DropShadowEffect {
+            Color = Color.FromArgb(240, 12, 5, 24),
+            BlurRadius = 26,
+            ShadowDepth = 4,
+            Direction = 315,
+            Opacity = 0.95
+        };
+
+        valBlock = new TextBlock {
+            Text = initVal,
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = digitFontSize, // 190pt HUGE DIGITS!
+            FontWeight = FontWeights.Bold,
+            Foreground = numBrush,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            LineHeight = digitFontSize * 0.95,
+            Effect = shadow
+        };
+
+        lblBlock = new TextBlock {
+            Text = initLbl,
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = 23,
+            FontWeight = FontWeights.ExtraBold,
+            Foreground = new SolidColorBrush(lblColor),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 4, 0, 0),
+            Effect = shadow
+        };
+
+        stack.Children.Add(valBlock);
+        stack.Children.Add(lblBlock);
+        return stack;
+    }
+
+    private TextBlock CreateHugeColon(DropShadowEffect shadow) {
+        return new TextBlock {
+            Text = ":",
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = 130,
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255)),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(8, 0, 8, 40),
+            Effect = shadow
+        };
+    }
+
+    // =========================================================================
+    // 2. COMPACT WIDGET WITH CARD (400x185 in corner)
+    // =========================================================================
     private Border BuildCompactWidgetUI() {
         var outerBorder = new Border {
             CornerRadius = new CornerRadius(20),
@@ -305,7 +502,8 @@ public class WidgetWindow : Window {
                 Color.FromArgb(235, 12, 8, 26),
                 new Point(0, 0),
                 new Point(1, 1)
-            )
+            ),
+            Visibility = Visibility.Collapsed
         };
 
         var mainGrid = new Grid {
@@ -315,12 +513,10 @@ public class WidgetWindow : Window {
         mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-        // ROW 0: Top Section
         var topGrid = new Grid();
         topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        // Top Left: Days on top, Title & Big Total Hours
         var leftStack = new StackPanel();
         txtTopDays = new TextBlock {
             Text = "⚡ 2 ДНЯ ДО РЕЛИЗА",
@@ -380,7 +576,6 @@ public class WidgetWindow : Window {
         Grid.SetColumn(leftStack, 0);
         topGrid.Children.Add(leftStack);
 
-        // Top Right: Logo, Date & Fullscreen Button
         var rightStack = new StackPanel {
             HorizontalAlignment = HorizontalAlignment.Right
         };
@@ -411,7 +606,7 @@ public class WidgetWindow : Window {
         };
         dateRow.Children.Add(txtRelDate);
 
-        var btnFs = new Border {
+        var btnMode = new Border {
             Background = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)),
             BorderBrush = new SolidColorBrush(Color.FromArgb(90, 255, 255, 255)),
             BorderThickness = new Thickness(1),
@@ -419,17 +614,17 @@ public class WidgetWindow : Window {
             Padding = new Thickness(5, 1, 5, 2),
             Margin = new Thickness(6, 0, 0, 0),
             Cursor = Cursors.Hand,
-            ToolTip = "На весь экран (2560×1440) [F11]"
+            ToolTip = "Переключить на огромные цифры по центру"
         };
-        var txtFs = new TextBlock {
-            Text = "⛶",
+        var txtBtn = new TextBlock {
+            Text = "✦",
             FontSize = 10,
             FontWeight = FontWeights.Bold,
             Foreground = Brushes.White
         };
-        btnFs.Child = txtFs;
-        btnFs.MouseLeftButtonDown += (s, e) => { SetFullscreen(true); e.Handled = true; };
-        dateRow.Children.Add(btnFs);
+        btnMode.Child = txtBtn;
+        btnMode.MouseLeftButtonDown += (s, e) => { SwitchMode(DisplayMode.TransparentDigits); e.Handled = true; };
+        dateRow.Children.Add(btnMode);
 
         rightStack.Children.Add(dateRow);
 
@@ -439,7 +634,6 @@ public class WidgetWindow : Window {
         Grid.SetRow(topGrid, 0);
         mainGrid.Children.Add(topGrid);
 
-        // ROW 1: Subtle Divider Line
         var divider = new Rectangle {
             Height = 0.5,
             Fill = new SolidColorBrush(Color.FromArgb(32, 255, 255, 255)),
@@ -448,16 +642,16 @@ public class WidgetWindow : Window {
         Grid.SetRow(divider, 1);
         mainGrid.Children.Add(divider);
 
-        // ROW 2: Bottom Section
-        cardRelease = CreateCountdownCard("🚀 ОБРАТНЫЙ ОТСЧЕТ", "18.11.2026 • 21:30", Color.FromRgb(255, 59, 136), out rH, out rM, out rS, out rDoneBox, out rGrid, "ИГРА ВЫШЛА! 🎉");
-        Grid.SetRow(cardRelease, 2);
-        mainGrid.Children.Add(cardRelease);
+        // Countdown Card inside compact view
+        var card = CreateCompactCountdownCard("🚀 ОБРАТНЫЙ ОТСЧЕТ", "18.11.2026 • 21:30", Color.FromRgb(255, 59, 136), out rH, out rM, out rS, out rDoneBox, out rGrid, "ИГРА ВЫШЛА! 🎉");
+        Grid.SetRow(card, 2);
+        mainGrid.Children.Add(card);
 
         outerBorder.Child = mainGrid;
         return outerBorder;
     }
 
-    private Border CreateCountdownCard(string title, string dateStr, Color accentColor, out TextBlock tbH, out TextBlock tbM, out TextBlock tbS, out Border doneBox, out UniformGrid grid, string doneText) {
+    private Border CreateCompactCountdownCard(string title, string dateStr, Color accentColor, out TextBlock tbH, out TextBlock tbM, out TextBlock tbS, out Border doneBox, out UniformGrid grid, string doneText) {
         var cardBorder = new Border {
             Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0)),
             CornerRadius = new CornerRadius(10),
@@ -557,12 +751,12 @@ public class WidgetWindow : Window {
     }
 
     // =========================================================================
-    // FULLSCREEN 2560x1440 UI BUILDER ("ПО КРАСОТЕ")
+    // 3. FULLSCREEN CINEMA VIEW
     // =========================================================================
     private Border BuildFullscreenUI() {
         var outer = new Border {
             Background = new LinearGradientBrush(
-                Color.FromArgb(238, 14, 8, 28), // 93% deep nocturnal violet with acrylic feel
+                Color.FromArgb(238, 14, 8, 28),
                 Color.FromArgb(248, 6, 3, 15),
                 new Point(0, 0),
                 new Point(1, 1)
@@ -582,7 +776,6 @@ public class WidgetWindow : Window {
             Height = 1440
         };
 
-        // Ambient Neon Glow Orbs (Vice City Neon Lighting)
         var pinkGlow = new Ellipse {
             Width = 1100,
             Height = 1100,
@@ -611,34 +804,26 @@ public class WidgetWindow : Window {
         };
         canvas.Children.Add(cyanGlow);
 
-        // Main Vertical Grid
         var contentGrid = new Grid {
             Margin = new Thickness(100, 50, 100, 50)
         };
-        contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(140) }); // Top header
-        contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(270) }); // Logo & Title
-        contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(640) }); // GIANT DIGITS
-        contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Footer
+        contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(140) });
+        contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(270) });
+        contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(640) });
+        contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-        // ROW 0: Top Header
+        // Header
         var topHeader = new Grid();
         topHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         topHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        // Centered Top Days Badge
         var daysBadgeBorder = new Border {
             Background = new SolidColorBrush(Color.FromArgb(45, 255, 42, 141)),
             BorderBrush = new SolidColorBrush(Color.FromArgb(160, 255, 42, 141)),
             BorderThickness = new Thickness(2),
             CornerRadius = new CornerRadius(30),
             Padding = new Thickness(36, 12, 36, 12),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Effect = new DropShadowEffect {
-                Color = Color.FromRgb(255, 42, 141),
-                BlurRadius = 30,
-                ShadowDepth = 0,
-                Opacity = 0.55
-            }
+            HorizontalAlignment = HorizontalAlignment.Center
         };
         fsDaysBadge = new TextBlock {
             Text = "⚡ ОСТАЛОСЬ 2 ДНЯ (52 ЧАСА) ДО МИРОВОГО РЕЛИЗА ⚡",
@@ -652,7 +837,6 @@ public class WidgetWindow : Window {
         Grid.SetColumn(daysBadgeBorder, 0);
         topHeader.Children.Add(daysBadgeBorder);
 
-        // Top Right Controls (Switch back to widget / Close)
         var controlsStack = new StackPanel {
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -669,66 +853,35 @@ public class WidgetWindow : Window {
             Margin = new Thickness(0, 0, 16, 0)
         };
         var txtBack = new TextBlock {
-            Text = "🗗 ВЕРНУТЬСЯ В ВИДЖЕТ (F11)",
+            Text = "🗗 ВЕРНУТЬСЯ (F11)",
             FontFamily = new FontFamily("Segoe UI"),
             FontSize = 16,
             FontWeight = FontWeights.Bold,
             Foreground = Brushes.White
         };
         btnBack.Child = txtBack;
-        btnBack.MouseLeftButtonDown += (s, e) => { SetFullscreen(false); e.Handled = true; };
+        btnBack.MouseLeftButtonDown += (s, e) => { SwitchMode(DisplayMode.TransparentDigits); e.Handled = true; };
         controlsStack.Children.Add(btnBack);
-
-        var btnClose = new Border {
-            Background = new SolidColorBrush(Color.FromArgb(50, 255, 50, 80)),
-            BorderBrush = new SolidColorBrush(Color.FromArgb(140, 255, 50, 80)),
-            BorderThickness = new Thickness(1.5),
-            CornerRadius = new CornerRadius(16),
-            Width = 44,
-            Height = 44,
-            Cursor = Cursors.Hand
-        };
-        var txtClose = new TextBlock {
-            Text = "✕",
-            FontFamily = new FontFamily("Segoe UI"),
-            FontSize = 20,
-            FontWeight = FontWeights.Bold,
-            Foreground = Brushes.White,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        btnClose.Child = txtClose;
-        btnClose.MouseLeftButtonDown += (s, e) => { this.Close(); e.Handled = true; };
-        controlsStack.Children.Add(btnClose);
 
         Grid.SetColumn(controlsStack, 1);
         topHeader.Children.Add(controlsStack);
-
         Grid.SetRow(topHeader, 0);
         contentGrid.Children.Add(topHeader);
 
-        // ROW 1: Logo & Title
+        // Logo
         var logoStack = new StackPanel {
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
-
         var logoSrc = GetLogoImage();
         if (logoSrc != null) {
             var imgLogo = new Image {
                 Source = logoSrc,
                 Height = 175,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Effect = new DropShadowEffect {
-                    Color = Color.FromRgb(255, 42, 141),
-                    BlurRadius = 45,
-                    ShadowDepth = 0,
-                    Opacity = 0.65
-                }
+                HorizontalAlignment = HorizontalAlignment.Center
             };
             logoStack.Children.Add(imgLogo);
         }
-
         var txtFullTitle = new TextBlock {
             Text = "GRAND THEFT AUTO VI",
             FontFamily = new FontFamily("Segoe UI"),
@@ -739,40 +892,28 @@ public class WidgetWindow : Window {
             Margin = new Thickness(0, 10, 0, 0)
         };
         logoStack.Children.Add(txtFullTitle);
-
         Grid.SetRow(logoStack, 1);
         contentGrid.Children.Add(logoStack);
 
-        // ROW 2: THE GIANT DIGITS (Cinematic Cards)
+        // Center Digits
         var centerDigitsWrapper = new Grid {
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
-
         fsDigitsRow = new StackPanel {
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
 
-        // 1. HOURS CARD
-        fsDigitsRow.Children.Add(CreateGiantDigitCard(out fsNumHours, out fsLblHours, "52", "ЧАСА", Color.FromRgb(255, 42, 141), true));
-
-        // Separator 1
-        fsDigitsRow.Children.Add(CreateGiantSeparator());
-
-        // 2. MINUTES CARD
-        fsDigitsRow.Children.Add(CreateGiantDigitCard(out fsNumMins, out fsLblMins, "20", "МИНУТ", Color.FromArgb(220, 240, 235, 255), false));
-
-        // Separator 2
-        fsDigitsRow.Children.Add(CreateGiantSeparator());
-
-        // 3. SECONDS CARD (ELECTRIC CYAN LIVE SECONDS)
-        fsDigitsRow.Children.Add(CreateGiantDigitCard(out fsNumSecs, out fsLblSecs, "10", "СЕКУНД", Color.FromRgb(0, 242, 254), true));
+        fsDigitsRow.Children.Add(CreateFsCard(out fsNumHours, out fsLblHours, "52", "ЧАСА", Color.FromRgb(255, 42, 141)));
+        fsDigitsRow.Children.Add(CreateFsSeparator());
+        fsDigitsRow.Children.Add(CreateFsCard(out fsNumMins, out fsLblMins, "20", "МИНУТ", Color.FromArgb(220, 240, 235, 255)));
+        fsDigitsRow.Children.Add(CreateFsSeparator());
+        fsDigitsRow.Children.Add(CreateFsCard(out fsNumSecs, out fsLblSecs, "10", "СЕКУНД", Color.FromRgb(0, 242, 254)));
 
         centerDigitsWrapper.Children.Add(fsDigitsRow);
 
-        // Done Box for Fullscreen
         fsDoneBox = new Border {
             Background = new SolidColorBrush(Color.FromArgb(60, 0, 255, 140)),
             BorderBrush = new SolidColorBrush(Color.FromRgb(0, 255, 140)),
@@ -781,13 +922,7 @@ public class WidgetWindow : Window {
             Padding = new Thickness(60, 30, 60, 30),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            Visibility = Visibility.Collapsed,
-            Effect = new DropShadowEffect {
-                Color = Color.FromRgb(0, 255, 140),
-                BlurRadius = 50,
-                ShadowDepth = 0,
-                Opacity = 0.7
-            }
+            Visibility = Visibility.Collapsed
         };
         var txtFsDone = new TextBlock {
             Text = "🎉 РЕЛИЗ GTA VI СОСТОЯЛСЯ! ДОЖДАЛИСЬ! 🎉",
@@ -803,53 +938,13 @@ public class WidgetWindow : Window {
         Grid.SetRow(centerDigitsWrapper, 2);
         contentGrid.Children.Add(centerDigitsWrapper);
 
-        // ROW 3: Footer
-        var footerStack = new StackPanel {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
-        fsRelDate = new TextBlock {
-            Text = "🚀 МИРОВОЙ РЕЛИЗ: 18 НОЯБРЯ 2026 ГОДА • 21:30 МСК (ВТОРНИК)",
-            FontFamily = new FontFamily("Segoe UI"),
-            FontSize = 22,
-            FontWeight = FontWeights.SemiBold,
-            Foreground = new SolidColorBrush(Color.FromArgb(235, 255, 255, 255)),
-            HorizontalAlignment = HorizontalAlignment.Center
-        };
-        footerStack.Children.Add(fsRelDate);
-
-        var txtPlatform = new TextBlock {
-            Text = "PlayStation 5 • Xbox Series X|S • Vice City & Leonida",
-            FontFamily = new FontFamily("Segoe UI"),
-            FontSize = 16,
-            FontWeight = FontWeights.Normal,
-            Foreground = new SolidColorBrush(Color.FromArgb(160, 255, 255, 255)),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 8, 0, 0)
-        };
-        footerStack.Children.Add(txtPlatform);
-
-        var txtHints = new TextBlock {
-            Text = "[ F11 ] или Двойной клик — Свернуть в виджет  •  [ Esc ] — Выход  •  [ ПКМ ] — Меню настроек",
-            FontFamily = new FontFamily("Segoe UI"),
-            FontSize = 14,
-            Foreground = new SolidColorBrush(Color.FromArgb(110, 255, 255, 255)),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 18, 0, 0)
-        };
-        footerStack.Children.Add(txtHints);
-
-        Grid.SetRow(footerStack, 3);
-        contentGrid.Children.Add(footerStack);
-
         canvas.Children.Add(contentGrid);
         viewbox.Child = canvas;
         outer.Child = viewbox;
         return outer;
     }
 
-    private Border CreateGiantDigitCard(out TextBlock valBlock, out TextBlock lblBlock, string initVal, string initLbl, Color accent, bool withGlow) {
+    private Border CreateFsCard(out TextBlock valBlock, out TextBlock lblBlock, string initVal, string initLbl, Color accent) {
         var card = new Border {
             Width = 430,
             Height = 360,
@@ -859,21 +954,10 @@ public class WidgetWindow : Window {
             CornerRadius = new CornerRadius(28),
             Margin = new Thickness(10, 0, 10, 0)
         };
-
-        if (withGlow) {
-            card.Effect = new DropShadowEffect {
-                Color = accent,
-                BlurRadius = 40,
-                ShadowDepth = 0,
-                Opacity = 0.45
-            };
-        }
-
         var stack = new StackPanel {
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center
         };
-
         valBlock = new TextBlock {
             Text = initVal,
             FontFamily = new FontFamily("Segoe UI"),
@@ -882,7 +966,6 @@ public class WidgetWindow : Window {
             Foreground = Brushes.White,
             HorizontalAlignment = HorizontalAlignment.Center
         };
-
         lblBlock = new TextBlock {
             Text = initLbl,
             FontFamily = new FontFamily("Segoe UI"),
@@ -892,14 +975,13 @@ public class WidgetWindow : Window {
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, 5, 0, 0)
         };
-
         stack.Children.Add(valBlock);
         stack.Children.Add(lblBlock);
         card.Child = stack;
         return card;
     }
 
-    private TextBlock CreateGiantSeparator() {
+    private TextBlock CreateFsSeparator() {
         return new TextBlock {
             Text = ":",
             FontFamily = new FontFamily("Segoe UI"),
@@ -911,47 +993,150 @@ public class WidgetWindow : Window {
         };
     }
 
+    // =========================================================================
+    // MODE SWITCHING & WINDOW SIZING
+    // =========================================================================
+    public void SwitchMode(DisplayMode newMode) {
+        ApplyMode(newMode, true);
+    }
+
+    private void ApplyMode(DisplayMode newMode, bool save) {
+        // Save bounds of current mode
+        if (currentMode == DisplayMode.TransparentDigits) {
+            digitsLeft = this.Left;
+            digitsTop = this.Top;
+            digitsWidth = this.Width;
+            digitsHeight = this.Height;
+        } else if (currentMode == DisplayMode.CompactCard) {
+            cardLeft = this.Left;
+            cardTop = this.Top;
+            cardWidth = this.Width;
+            cardHeight = this.Height;
+        }
+
+        currentMode = newMode;
+
+        transparentDigitsView.Visibility = Visibility.Collapsed;
+        compactCardView.Visibility = Visibility.Collapsed;
+        fullscreenCinemaView.Visibility = Visibility.Collapsed;
+
+        double sw = SystemParameters.PrimaryScreenWidth;
+        double sh = SystemParameters.PrimaryScreenHeight;
+        if (sw <= 0) sw = 2560;
+        if (sh <= 0) sh = 1440;
+
+        if (currentMode == DisplayMode.TransparentDigits) {
+            // "ПРОСТО ОГРОМНЫЕ ЦИФРЫ БЕЗ ФОНА ПО ЦЕНТРУ"
+            transparentDigitsView.Visibility = Visibility.Visible;
+            this.MinWidth = 800;
+            this.MinHeight = 250;
+            this.MaxWidth = double.PositiveInfinity;
+            this.MaxHeight = double.PositiveInfinity;
+
+            if (digitsLeft <= 0 || digitsLeft >= sw - 200) {
+                digitsLeft = (sw - digitsWidth) / 2.0;
+                digitsTop = (sh - digitsHeight) / 2.0 - 50.0;
+            }
+
+            this.Left = digitsLeft;
+            this.Top = digitsTop;
+            this.Width = digitsWidth;
+            this.Height = digitsHeight;
+        } else if (currentMode == DisplayMode.CompactCard) {
+            // Компактный виджет в углу
+            compactCardView.Visibility = Visibility.Visible;
+            this.MinWidth = 260;
+            this.MinHeight = 115;
+            this.MaxWidth = 800;
+            this.MaxHeight = 450;
+
+            this.Left = cardLeft;
+            this.Top = cardTop;
+            this.Width = cardWidth;
+            this.Height = cardHeight;
+        } else if (currentMode == DisplayMode.FullscreenCinema) {
+            // Полноэкранный кинотеатр
+            fullscreenCinemaView.Visibility = Visibility.Visible;
+            this.MinWidth = sw;
+            this.MinHeight = sh;
+            this.Left = 0;
+            this.Top = 0;
+            this.Width = sw;
+            this.Height = sh;
+        }
+
+        ApplyWindowPosition();
+        if (save) SaveConfig();
+        UpdateCountdown();
+    }
+
+    public void CenterOnScreen() {
+        double sw = SystemParameters.PrimaryScreenWidth;
+        double sh = SystemParameters.PrimaryScreenHeight;
+        if (sw <= 0) sw = 2560;
+        if (sh <= 0) sh = 1440;
+
+        this.Left = (sw - this.Width) / 2.0;
+        this.Top = (sh - this.Height) / 2.0 - 40.0;
+        SaveConfig();
+    }
+
+    private void SetDigitFontSize(double size) {
+        digitFontSize = size;
+        if (tdHoursNum != null) tdHoursNum.FontSize = size;
+        if (tdMinsNum != null) tdMinsNum.FontSize = size;
+        if (tdSecsNum != null) tdSecsNum.FontSize = size;
+        if (tdColon1 != null) tdColon1.FontSize = size * 0.7;
+        if (tdColon2 != null) tdColon2.FontSize = size * 0.7;
+
+        this.Width = size * 6.2;
+        this.Height = size * 2.0;
+        CenterOnScreen();
+    }
+
     private void BuildContextMenu() {
         var menu = new ContextMenu();
 
-        var titleItem = new MenuItem { Header = "🎮 GTA VI Отсчет до релиза", IsEnabled = false };
+        var titleItem = new MenuItem { Header = "🎮 GTA VI Таймер", IsEnabled = false };
         menu.Items.Add(titleItem);
         menu.Items.Add(new Separator());
 
-        // Fullscreen Toggle
-        var itemFs = new MenuItem { Header = "📺 На весь экран (2560×1440 / F11)" };
-        itemFs.Click += (s, e) => ToggleFullscreen();
-        menu.Items.Add(itemFs);
+        // Mode Switching
+        var mDigits = new MenuItem { Header = "⭐ Огромные цифры без фона (по центру)" };
+        mDigits.Click += (s, e) => SwitchMode(DisplayMode.TransparentDigits);
+        menu.Items.Add(mDigits);
 
-        var itemWidget = new MenuItem { Header = "🗗 Режим виджета (400 × 185)" };
-        itemWidget.Click += (s, e) => SetFullscreen(false);
-        menu.Items.Add(itemWidget);
+        var mCenter = new MenuItem { Header = "🎯 Выровнять ровно по центру экрана" };
+        mCenter.Click += (s, e) => CenterOnScreen();
+        menu.Items.Add(mCenter);
+
+        // Size sub-menu for digits
+        var sizeSub = new MenuItem { Header = "📏 Размер цифр..." };
+        var s1 = new MenuItem { Header = "Колоссальные (240px)" };
+        s1.Click += (s, e) => SetDigitFontSize(240);
+        sizeSub.Items.Add(s1);
+
+        var s2 = new MenuItem { Header = "Огромные (190px — Стандарт 2K)" };
+        s2.Click += (s, e) => SetDigitFontSize(190);
+        sizeSub.Items.Add(s2);
+
+        var s3 = new MenuItem { Header = "Крупные (140px)" };
+        s3.Click += (s, e) => SetDigitFontSize(140);
+        sizeSub.Items.Add(s3);
+        menu.Items.Add(sizeSub);
 
         menu.Items.Add(new Separator());
 
-        // Preset sizes
-        var sizeMenu = new MenuItem { Header = "Размер виджета..." };
+        var mCard = new MenuItem { Header = "🗗 Компактный виджет с карточкой (в углу)" };
+        mCard.Click += (s, e) => SwitchMode(DisplayMode.CompactCard);
+        menu.Items.Add(mCard);
 
-        var m1 = new MenuItem { Header = "Компактный (290 × 134)" };
-        m1.Click += (s, e) => { SetFullscreen(false); SetSize(290, 134); };
-        sizeMenu.Items.Add(m1);
+        var mCinema = new MenuItem { Header = "📺 Полноэкранный кинотеатр (2560×1440 / F11)" };
+        mCinema.Click += (s, e) => SwitchMode(DisplayMode.FullscreenCinema);
+        menu.Items.Add(mCinema);
 
-        var m2 = new MenuItem { Header = "Классический (342 × 158)" };
-        m2.Click += (s, e) => { SetFullscreen(false); SetSize(342, 158); };
-        sizeMenu.Items.Add(m2);
-
-        var m3 = new MenuItem { Header = "Крупный (400 × 185)" };
-        m3.Click += (s, e) => { SetFullscreen(false); SetSize(400, 185); };
-        sizeMenu.Items.Add(m3);
-
-        var m4 = new MenuItem { Header = "Большой (550 × 255)" };
-        m4.Click += (s, e) => { SetFullscreen(false); SetSize(550, 255); };
-        sizeMenu.Items.Add(m4);
-
-        menu.Items.Add(sizeMenu);
         menu.Items.Add(new Separator());
 
-        // Always on top
         var itemTopmost = new MenuItem {
             Header = "Поверх всех окон",
             IsCheckable = true,
@@ -960,19 +1145,11 @@ public class WidgetWindow : Window {
         itemTopmost.Click += (s, e) => {
             isTopmost = !isTopmost;
             itemTopmost.IsChecked = isTopmost;
-            var helper = new WindowInteropHelper(this);
-            if (isTopmost) {
-                this.Topmost = true;
-                Win32.SetWindowPos(helper.Handle, Win32.HWND_TOPMOST, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
-            } else {
-                this.Topmost = false;
-                Win32.SetWindowPos(helper.Handle, isFullscreen ? Win32.HWND_TOP : Win32.HWND_BOTTOM, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
-            }
+            ApplyWindowPosition();
             SaveConfig();
         };
         menu.Items.Add(itemTopmost);
 
-        // Lock Position
         var itemLock = new MenuItem {
             Header = "Закрепить положение",
             IsCheckable = true,
@@ -987,72 +1164,11 @@ public class WidgetWindow : Window {
 
         menu.Items.Add(new Separator());
 
-        // Close
-        var itemClose = new MenuItem { Header = "Закрыть виджет" };
+        var itemClose = new MenuItem { Header = "Закрыть" };
         itemClose.Click += (s, e) => this.Close();
         menu.Items.Add(itemClose);
 
         this.ContextMenu = menu;
-    }
-
-    private void SetSize(double w, double h) {
-        this.Width = w;
-        this.Height = h;
-        SaveConfig();
-    }
-
-    public void ToggleFullscreen() {
-        SetFullscreen(!isFullscreen);
-    }
-
-    public void SetFullscreen(bool full) {
-        if (full == isFullscreen) return;
-
-        isFullscreen = full;
-        if (isFullscreen) {
-            // Save widget bounds
-            prevLeft = this.Left;
-            prevTop = this.Top;
-            prevWidth = this.Width;
-            prevHeight = this.Height;
-
-            widgetCard.Visibility = Visibility.Collapsed;
-            fullscreenCard.Visibility = Visibility.Visible;
-
-            double sw = SystemParameters.PrimaryScreenWidth;
-            double sh = SystemParameters.PrimaryScreenHeight;
-            if (sw <= 0) sw = 2560;
-            if (sh <= 0) sh = 1440;
-
-            this.Left = 0;
-            this.Top = 0;
-            this.Width = sw;
-            this.Height = sh;
-
-            var helper = new WindowInteropHelper(this);
-            if (helper.Handle != IntPtr.Zero) {
-                Win32.SetWindowPos(helper.Handle, isTopmost ? Win32.HWND_TOPMOST : Win32.HWND_TOP, 0, 0, (int)sw, (int)sh, Win32.SWP_SHOWWINDOW);
-            }
-        } else {
-            fullscreenCard.Visibility = Visibility.Collapsed;
-            widgetCard.Visibility = Visibility.Visible;
-
-            this.Left = prevLeft;
-            this.Top = prevTop;
-            this.Width = prevWidth;
-            this.Height = prevHeight;
-
-            var helper = new WindowInteropHelper(this);
-            if (helper.Handle != IntPtr.Zero) {
-                if (!isTopmost) {
-                    Win32.SetWindowPos(helper.Handle, Win32.HWND_BOTTOM, (int)prevLeft, (int)prevTop, (int)prevWidth, (int)prevHeight, Win32.SWP_NOACTIVATE);
-                } else {
-                    Win32.SetWindowPos(helper.Handle, Win32.HWND_TOPMOST, (int)prevLeft, (int)prevTop, (int)prevWidth, (int)prevHeight, Win32.SWP_NOACTIVATE);
-                }
-            }
-        }
-        SaveConfig();
-        UpdateCountdown();
     }
 
     private void UpdateCountdown() {
@@ -1060,7 +1176,12 @@ public class WidgetWindow : Window {
         TimeSpan rDiff = releaseDate - now;
 
         if (rDiff.TotalSeconds <= 0) {
-            // Compact Widget
+            // Transparent Digits View
+            tdDaysTop.Text = "🎉 ИГРА ВЫШЛА!";
+            tdDigitsRow.Visibility = Visibility.Collapsed;
+            tdDoneBox.Visibility = Visibility.Visible;
+
+            // Compact View
             txtTopDays.Text = "🎉 РЕЛИЗ СОСТОЯЛСЯ!";
             txtDaysBig.Text = "0";
             txtDaysLbl.Text = "ЧАСОВ";
@@ -1068,7 +1189,7 @@ public class WidgetWindow : Window {
             rGrid.Visibility = Visibility.Collapsed;
             rDoneBox.Visibility = Visibility.Visible;
 
-            // Fullscreen
+            // Fullscreen View
             fsDaysBadge.Text = "🎉 ИГРА ВЫШЛА! РЕЛИЗ СОСТОЯЛСЯ! 🎉";
             fsDigitsRow.Visibility = Visibility.Collapsed;
             fsDoneBox.Visibility = Visibility.Visible;
@@ -1081,7 +1202,26 @@ public class WidgetWindow : Window {
             string hoursWord = GetHoursDeclension(totalHours);
             string daysWord = GetDaysDeclension(d);
 
-            // Compact Widget
+            // 1. Transparent Digits View ("ПРОСТО ЦИФРЫ БЕЗ ФОНА")
+            if (d == 0) {
+                tdDaysTop.Text = string.Format("⚡ ФИНАЛЬНЫЙ ДЕНЬ • ВСЕГО {0} {1} ДО РЕЛИЗА ⚡", totalHours, hoursWord);
+            } else {
+                tdDaysTop.Text = string.Format("⚡ ОСТАЛОСЬ {0} {1} ({2} {3}) ДО РЕЛИЗА ⚡", d, daysWord, totalHours, hoursWord);
+            }
+
+            tdHoursNum.Text = totalHours.ToString();
+            tdHoursLbl.Text = hoursWord;
+
+            tdMinsNum.Text = mins.ToString("D2");
+            tdMinsLbl.Text = GetMinsDeclension(mins);
+
+            tdSecsNum.Text = secs.ToString("D2");
+            tdSecsLbl.Text = GetSecsDeclension(secs);
+
+            tdDigitsRow.Visibility = Visibility.Visible;
+            tdDoneBox.Visibility = Visibility.Collapsed;
+
+            // 2. Compact View
             if (d == 0) {
                 txtTopDays.Text = "⚡ ФИНАЛЬНЫЙ ДЕНЬ ДО РЕЛИЗА";
             } else if (d == 1) {
@@ -1100,22 +1240,14 @@ public class WidgetWindow : Window {
             rGrid.Visibility = Visibility.Visible;
             rDoneBox.Visibility = Visibility.Collapsed;
 
-            // Fullscreen ("По красоте")
-            if (d == 0) {
-                fsDaysBadge.Text = string.Format("⚡ ФИНАЛЬНЫЙ ДЕНЬ • ВСЕГО {0} {1} ДО РЕЛИЗА ⚡", totalHours, hoursWord);
-            } else {
-                fsDaysBadge.Text = string.Format("⚡ ОСТАЛОСЬ {0} {1} ({2} {3}) ДО МИРОВОГО РЕЛИЗА ⚡", d, daysWord, totalHours, hoursWord);
-            }
-
+            // 3. Fullscreen View
+            fsDaysBadge.Text = tdDaysTop.Text;
             fsNumHours.Text = totalHours.ToString();
             fsLblHours.Text = hoursWord;
-
             fsNumMins.Text = mins.ToString("D2");
             fsLblMins.Text = GetMinsDeclension(mins);
-
             fsNumSecs.Text = secs.ToString("D2");
             fsLblSecs.Text = GetSecsDeclension(secs);
-
             fsDigitsRow.Visibility = Visibility.Visible;
             fsDoneBox.Visibility = Visibility.Collapsed;
         }
@@ -1160,13 +1292,13 @@ public class WidgetWindow : Window {
     private void SaveConfig() {
         try {
             string line = string.Format("{0};{1};{2};{3};{4};{5};{6}",
-                (int)(isFullscreen ? prevLeft : this.Left),
-                (int)(isFullscreen ? prevTop : this.Top),
-                (int)(isFullscreen ? prevWidth : this.Width),
-                (int)(isFullscreen ? prevHeight : this.Height),
+                (int)this.Left,
+                (int)this.Top,
+                (int)this.Width,
+                (int)this.Height,
                 isTopmost ? 1 : 0,
                 isLocked ? 1 : 0,
-                isFullscreen ? 1 : 0);
+                (int)currentMode);
             File.WriteAllText(configFile, line);
         } catch { }
     }
@@ -1181,19 +1313,29 @@ public class WidgetWindow : Window {
                     double w = double.Parse(parts[2]);
                     double h = double.Parse(parts[3]);
 
-                    if (w >= this.MinWidth) prevWidth = w;
-                    if (h >= this.MinHeight) prevHeight = h;
-                    if (l >= 0 && l < SystemParameters.VirtualScreenWidth - 50) prevLeft = l;
-                    if (t >= 0 && t < SystemParameters.VirtualScreenHeight - 50) prevTop = t;
+                    if (parts.Length >= 7) {
+                        int m = int.Parse(parts[6]);
+                        if (m == 0) currentMode = DisplayMode.TransparentDigits;
+                        else if (m == 1) currentMode = DisplayMode.CompactCard;
+                        else if (m == 2) currentMode = DisplayMode.FullscreenCinema;
+                    } else {
+                        currentMode = DisplayMode.TransparentDigits;
+                    }
 
-                    this.Left = prevLeft;
-                    this.Top = prevTop;
-                    this.Width = prevWidth;
-                    this.Height = prevHeight;
+                    if (currentMode == DisplayMode.TransparentDigits) {
+                        if (w >= 600) digitsWidth = w;
+                        if (h >= 200) digitsHeight = h;
+                        if (l >= 0 && l < SystemParameters.VirtualScreenWidth - 100) digitsLeft = l;
+                        if (t >= 0 && t < SystemParameters.VirtualScreenHeight - 100) digitsTop = t;
+                    } else {
+                        if (w >= 260) cardWidth = w;
+                        if (h >= 115) cardHeight = h;
+                        if (l >= 0 && l < SystemParameters.VirtualScreenWidth - 50) cardLeft = l;
+                        if (t >= 0 && t < SystemParameters.VirtualScreenHeight - 50) cardTop = t;
+                    }
 
                     if (parts.Length >= 5) isTopmost = parts[4] == "1";
                     if (parts.Length >= 6) isLocked = parts[5] == "1";
-                    if (parts.Length >= 7) isFullscreen = parts[6] == "1";
                 }
             }
         } catch { }
